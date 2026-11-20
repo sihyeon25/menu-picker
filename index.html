@@ -165,7 +165,18 @@
     <!-- 메뉴 둘러보기 (다음 단계에서 구현) -->
     <section id="view-browse" class="view" hidden>
       <header class="top"><h1 class="title">메뉴<br>둘러보기</h1></header>
-      <div class="soon"><span class="soon-emoji">📖</span><p>곧 만들어요</p></div>
+      <div class="sticky-bar">
+        <input id="browse-search" type="search" placeholder="메뉴나 태그 검색 (예: 국물, 면)" aria-label="메뉴 검색" autocomplete="off">
+        <div id="browse-dims" class="dim-tabs" role="group" aria-label="구분 기준"></div>
+        <div id="browse-cats" class="cat-row" role="group" aria-label="세부 구분"></div>
+      </div>
+      <div id="browse-summary" class="summary" hidden></div>
+      <div class="browse-head">
+        <p id="browse-count" class="browse-count" aria-live="polite"></p>
+        <button id="btn-browse-draw" class="pill pill-ink pill-mini" type="button">여기서 뽑기</button>
+      </div>
+      <div id="browse-grid" class="menu-grid"></div>
+      <p id="browse-empty" class="empty" hidden>맞는 메뉴가 없어요. 다른 이름이나 종류로 찾아보세요.</p>
     </section>
 
     <!-- 다같이 정하기 (다음 단계에서 구현) -->

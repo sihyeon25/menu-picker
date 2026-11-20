@@ -46,6 +46,7 @@
   }
 
   function go(view) {
+    $("confetti").innerHTML = "";   // 화면이 바뀌면 남은 종이가루를 치운다
     VIEWS.forEach((v) => { $("view-" + v).hidden = v !== view; });
     const tab = view === "result" ? state.returnTo : view;
     document.querySelectorAll(".dock-item").forEach((b) => {
@@ -381,7 +382,8 @@
   }
 
   // ---------- 뽑기 ----------
-  function drawFrom(pool) {
+  function drawFrom(pool, from) {
+    from = from || "home";
     if (pool.length === 0) {
       showEmpty();
       return;
@@ -390,8 +392,8 @@
     showResult(menu, {
       spin: true,
       pool,
-      from: "home",
-      again: () => drawFrom(pool),
+      from,
+      again: () => drawFrom(pool, from),
     });
   }
 
@@ -401,6 +403,151 @@
 
   function drawFiltered() {
     drawFrom(MENUS.filter(matches));
+  }
+
+  // ---------- 메뉴 둘러보기 ----------
+  const browse = {
+    dim: "kind",   // 지금 보고 있는 구분 기준
+    q: "",
+    sel: { kind: new Set(), form: new Set(), flavor: new Set(), mood: new Set() },
+  };
+
+  function browseItems() {
+    const q = browse.q;
+    return MENUS.filter((m) => {
+      if (!menuMatchesFilters(m, browse.sel)) return false;
+      if (!q) return true;
+      const words = [m.name, m.category, m.form].concat(m.tags, m.flavors, m.moods);
+      return words.some((w) => w.includes(q));
+    });
+  }
+
+  // 기준 탭: 종류 / 형태 / 맛 / 상태 (고른 개수를 배지로 보여준다)
+  function renderDims() {
+    const box = $("browse-dims");
+    box.innerHTML = "";
+    FILTER_DIMS.forEach((d) => {
+      const b = el("button", "dim-tab", d.label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(browse.dim === d.key));
+      const n = browse.sel[d.key].size;
+      if (n > 0) b.appendChild(el("span", "dim-badge", String(n)));
+      b.addEventListener("click", () => {
+        browse.dim = d.key;
+        renderDims();
+        renderOptions();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  // 고른 기준의 세부 칩 (같은 기준 안에서는 여러 개를 골라도 "또는")
+  function renderOptions() {
+    const row = $("browse-cats");
+    row.innerHTML = "";
+    const dim = FILTER_DIMS.find((d) => d.key === browse.dim);
+    const set = browse.sel[dim.key];
+    dim.options.forEach((opt) => {
+      const b = el("button", "cat-chip", opt);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(set.has(opt)));
+      if (dim.key === "kind") b.style.setProperty("--tone", CATEGORY_TONE[opt]);
+      b.addEventListener("click", () => {
+        if (set.has(opt)) set.delete(opt);
+        else set.add(opt);
+        b.setAttribute("aria-pressed", String(set.has(opt)));
+        renderDims();
+        renderBrowse();
+      });
+      row.appendChild(b);
+    });
+  }
+
+  // 지금 고른 조건 모아 보기 (누르면 해제)
+  function renderSummary() {
+    const box = $("browse-summary");
+    box.innerHTML = "";
+    let total = 0;
+    FILTER_DIMS.forEach((d) => {
+      browse.sel[d.key].forEach((opt) => {
+        total += 1;
+        const c = el("button", "sum-chip", opt);
+        c.type = "button";
+        c.setAttribute("aria-label", d.label + " " + opt + " 조건 해제");
+        c.addEventListener("click", () => {
+          browse.sel[d.key].delete(opt);
+          renderDims();
+          renderOptions();
+          renderBrowse();
+        });
+        box.appendChild(c);
+      });
+    });
+    if (total > 0) {
+      box.insertBefore(el("span", "summary-label", "고른 조건"), box.firstChild);
+      const clear = el("button", "sum-clear", "모두 지우기");
+      clear.type = "button";
+      clear.addEventListener("click", () => {
+        FILTER_DIMS.forEach((d) => browse.sel[d.key].clear());
+        renderDims();
+        renderOptions();
+        renderBrowse();
+      });
+      box.appendChild(clear);
+    }
+    box.hidden = total === 0;
+  }
+
+  function drawFromBrowse() {
+    const pool = browseItems();
+    if (pool.length === 0) return;
+    state.browseY = window.scrollY;
+    drawFrom(pool, "browse");
+  }
+
+  function renderBrowse() {
+    const grid = $("browse-grid");
+    grid.innerHTML = "";
+    renderSummary();
+    const items = browseItems();
+    $("browse-count").textContent = items.length + "개";
+    $("btn-browse-draw").disabled = items.length === 0;
+    $("browse-empty").hidden = items.length > 0;
+
+    items.forEach((m, i) => {
+      const card = el("button", "menu-card");
+      card.type = "button";
+      card.style.setProperty("--tone", CATEGORY_TONE[m.category]);
+      card.style.setProperty("--n", Math.min(i, 12));
+
+      const visual = el("span", "mc-visual");
+      visual.appendChild(el("span", "mc-emoji", m.emoji));
+      if (m.photo) {
+        const img = el("img", "mc-photo");
+        img.alt = m.name;
+        img.loading = "lazy";
+        img.src = m.photo;
+        img.onerror = () => img.remove();
+        visual.appendChild(img);
+      }
+      card.append(visual, el("span", "mc-name", m.name), el("span", "mc-meta", m.category + " · " + SPICE_LABELS[m.spicy]));
+      card.addEventListener("click", () => {
+        state.browseY = window.scrollY;
+        showResult(m, { spin: false, from: "browse" });
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  function buildBrowse() {
+    renderDims();
+    renderOptions();
+    $("browse-search").addEventListener("input", (e) => {
+      browse.q = e.target.value.trim();
+      renderBrowse();
+    });
+    $("btn-browse-draw").addEventListener("click", drawFromBrowse);
+    renderBrowse();
   }
 
   // ---------- 근처 식당 ----------
@@ -494,6 +641,7 @@
     buildSplash();
     setGreeting();
     buildTiles();
+    buildBrowse();
     bindToggle("chips-people", "people");
     bindToggle("chips-spice", "spice");
 
@@ -518,7 +666,10 @@
     $("place-form").addEventListener("submit", searchPlaces);
     $("btn-back").addEventListener("click", () => {
       if (state.spinning) return;
-      go(state.returnTo);
+      const back = state.returnTo;
+      go(back);
+      // 둘러보던 자리로 돌아간다
+      if (back === "browse") window.scrollTo(0, state.browseY || 0);
     });
 
     document.querySelectorAll(".dock-item").forEach((b) => {
