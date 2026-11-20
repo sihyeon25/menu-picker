@@ -9,12 +9,115 @@
     excluded: new Set(),
     shown: new Set(),   // 이번 방문에서 이미 보여준 메뉴
     current: null,
+    again: null,        // "다시 뽑기"를 눌렀을 때 실행할 함수
+    returnTo: "home",
+    area: "",
     spinning: false,
   };
 
   const $ = (id) => document.getElementById(id);
+  const VIEWS = ["home", "result", "browse", "group"];
+  const TABS = ["home", "browse", "group"];
+  const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // ---------- 추천 로직 (규칙 기반) ----------
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function toast(message) {
+    const t = $("toast");
+    t.hidden = true;
+    void t.offsetWidth;
+    t.textContent = message;
+    t.hidden = false;
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => { t.hidden = true; }, 2200);
+  }
+
+  // ---------- 화면 전환 ----------
+  function playEnter(view) {
+    Array.from(view.children).forEach((c, i) => c.style.setProperty("--n", Math.min(i, 10)));
+    view.classList.remove("enter");
+    void view.offsetWidth;
+    view.classList.add("enter");
+  }
+
+  function go(view) {
+    VIEWS.forEach((v) => { $("view-" + v).hidden = v !== view; });
+    const tab = view === "result" ? state.returnTo : view;
+    document.querySelectorAll(".dock-item").forEach((b) => {
+      const on = b.dataset.view === tab;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-current", on ? "page" : "false");
+    });
+    $("dock").style.setProperty("--i", Math.max(0, TABS.indexOf(tab)));
+    window.scrollTo(0, 0);
+    if (!REDUCE) playEnter($("view-" + view));
+  }
+
+  // ---------- 시작 화면 ----------
+  function buildSplash() {
+    const box = $("splash-logo");
+    let n = 0;
+    ["오늘", "뭐 먹지?"].forEach((line, li) => {
+      if (li > 0) box.appendChild(document.createElement("br"));
+      Array.from(line).forEach((ch) => {
+        const s = el("span", ch === " " ? "sp" : "", ch === " " ? " " : ch);
+        s.style.setProperty("--i", n++);
+        box.appendChild(s);
+      });
+    });
+  }
+
+  function runSplash() {
+    const splash = $("splash");
+    if (REDUCE) {
+      splash.remove();
+      return;
+    }
+    let done = false;
+    function leave() {
+      if (done) return;
+      done = true;
+      splash.classList.add("leave");
+      playEnter($("view-home"));
+      setTimeout(() => splash.remove(), 900);
+    }
+    splash.addEventListener("click", leave);
+    setTimeout(leave, 2500);
+  }
+
+  // ---------- 라이트 / 다크 ----------
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#0c0c0e" : "#ffffff");
+  }
+
+  function toggleTheme() {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("theme", next); } catch (e) { /* 저장이 막혀 있어도 화면은 바뀐다 */ }
+  }
+
+  // ---------- 인사말 ----------
+  function setGreeting() {
+    const now = new Date();
+    const days = ["일", "월", "화", "수", "목", "금", "토"];
+    $("today").textContent = (now.getMonth() + 1) + "월 " + now.getDate() + "일 " + days[now.getDay()] + "요일";
+    const h = now.getHours();
+    let text = "야식 생각나는 밤이에요";
+    if (h >= 5 && h < 10) text = "좋은 아침이에요";
+    else if (h >= 10 && h < 14) text = "점심 먹을 시간이에요";
+    else if (h >= 14 && h < 17) text = "출출한 오후예요";
+    else if (h >= 17 && h < 21) text = "저녁 먹을 시간이에요";
+    $("greet").textContent = text;
+  }
+
+  // ---------- 추천 (규칙 기반) ----------
   function matches(menu) {
     if (state.excluded.has(menu.name)) return false;
     if (state.categories.size > 0 && !state.categories.has(menu.category)) return false;
@@ -25,64 +128,49 @@
     return true;
   }
 
-  function getPool() {
-    return MENUS.filter(matches);
-  }
-
   function pickOne(pool) {
     let candidates = pool.filter((m) => !state.shown.has(m.name));
-    if (candidates.length === 0) {       // 다 보여줬으면 처음부터 다시
+    if (candidates.length === 0) {
       state.shown.clear();
       candidates = pool;
     }
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  // ---------- 화면 전환 ----------
-  function show(screen) {
-    $("screen-home").hidden = screen !== "home";
-    $("screen-result").hidden = screen !== "result";
-    window.scrollTo(0, 0);
-  }
-
-  function toast(message) {
-    const el = $("toast");
-    el.textContent = message;
-    el.hidden = false;
-    clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => { el.hidden = true; }, 2200);
-  }
-
-  // ---------- 조건 칩 ----------
-  function buildCategoryChips() {
-    const box = $("chips-category");
+  // ---------- 조건 고르기 ----------
+  function buildTiles() {
+    const box = $("tiles");
     CATEGORIES.forEach((name) => {
-      const b = document.createElement("button");
-      b.className = "chip";
-      b.textContent = name;
+      const b = el("button", "tile");
+      b.type = "button";
+      b.style.setProperty("--tone", CATEGORY_TONE[name]);
       b.setAttribute("aria-pressed", "false");
+      b.append(el("span", "te", CATEGORY_EMOJI[name]), el("span", "", name));
       b.addEventListener("click", () => {
         if (state.categories.has(name)) state.categories.delete(name);
         else state.categories.add(name);
         const on = state.categories.has(name);
-        b.classList.toggle("active", on);
+        b.classList.toggle("on", on);
         b.setAttribute("aria-pressed", String(on));
       });
       box.appendChild(b);
     });
   }
 
-  function bindSingleChoice(boxId, key) {
+  // 같은 줄의 버튼은 하나만 켜지고, 다시 누르면 꺼진다 (꺼진 상태 = 상관없음)
+  function bindToggle(boxId, key) {
     const box = $(boxId);
     box.addEventListener("click", (e) => {
-      const b = e.target.closest(".chip");
+      const b = e.target.closest(".mchip");
       if (!b) return;
-      state[key] = b.dataset.value;
-      box.querySelectorAll(".chip").forEach((c) => {
-        const on = c === b;
-        c.classList.toggle("active", on);
-        c.setAttribute("aria-pressed", String(on));
-      });
+      const wasOn = b.getAttribute("aria-pressed") === "true";
+      box.querySelectorAll(".mchip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+      if (wasOn) {
+        state[key] = "any";
+      } else {
+        b.setAttribute("aria-pressed", "true");
+        state[key] = b.dataset.value;
+      }
     });
   }
 
@@ -90,9 +178,8 @@
     const box = $("chips-excluded");
     box.innerHTML = "";
     state.excluded.forEach((name) => {
-      const b = document.createElement("button");
-      b.className = "chip excluded";
-      b.textContent = name;
+      const b = el("button", "chip excluded", name);
+      b.type = "button";
       b.setAttribute("aria-label", name + " 빼기 취소");
       b.addEventListener("click", () => {
         state.excluded.delete(name);
@@ -100,6 +187,7 @@
       });
       box.appendChild(b);
     });
+    $("exclude-count").textContent = state.excluded.size ? "(" + state.excluded.size + "개)" : "";
   }
 
   function addExcluded() {
@@ -115,61 +203,135 @@
     renderExcluded();
   }
 
+  function toggleFold() {
+    const btn = $("btn-exclude-toggle");
+    const open = btn.getAttribute("aria-expanded") !== "true";
+    btn.setAttribute("aria-expanded", String(open));
+    $("exclude-box").classList.toggle("open", open);
+  }
+
   function resetConditions() {
     state.categories.clear();
     state.people = "any";
     state.spice = "any";
     state.excluded.clear();
-    document.querySelectorAll("#chips-category .chip").forEach((c) => {
-      c.classList.remove("active");
-      c.setAttribute("aria-pressed", "false");
+    document.querySelectorAll(".tile").forEach((t) => {
+      t.classList.remove("on");
+      t.setAttribute("aria-pressed", "false");
     });
-    ["chips-people", "chips-spice"].forEach((id) => {
-      document.querySelectorAll("#" + id + " .chip").forEach((c) => {
-        const on = c.dataset.value === "any";
-        c.classList.toggle("active", on);
-        c.setAttribute("aria-pressed", String(on));
-      });
-    });
+    document.querySelectorAll(".mchip").forEach((c) => c.setAttribute("aria-pressed", "false"));
     renderExcluded();
   }
 
-  // ---------- 룰렛 (슬롯 방식 연출) ----------
-  function spinTo(pool) {
-    if (state.spinning) return;
+  // ---------- 결과 화면 ----------
+  function setTone(menu) {
+    $("result-card").style.setProperty("--tone", CATEGORY_TONE[menu.category] || "#ffb04a");
+  }
+
+  function setVisual(menu, withPhoto) {
+    $("r-emoji").textContent = menu.emoji;
+    const img = $("r-photo");
+    img.hidden = true;
+    if (withPhoto && menu.photo) {
+      img.onload = () => { img.hidden = false; };
+      img.onerror = () => { img.hidden = true; };
+      img.alt = menu.name;
+      img.src = menu.photo;
+    }
+  }
+
+  function setTags(menu) {
+    const box = $("r-tags");
+    box.innerHTML = "";
+    box.appendChild(el("span", "tag", menu.category));
+    box.appendChild(el("span", "tag", SPICE_LABELS[menu.spicy]));
+    box.appendChild(el("span", "tag", menu.solo && menu.group ? "혼자도 같이도" : menu.solo ? "혼자 먹기 좋아요" : "같이 먹기 좋아요"));
+  }
+
+  // 결과가 확정될 때 종이가루가 터진다
+  function burst(tone) {
+    if (REDUCE) return;
+    const layer = $("confetti");
+    const rect = $("result-card").querySelector(".visual").getBoundingClientRect();
+    const ox = rect.left + rect.width / 2;
+    const oy = rect.top + rect.height / 2;
+    const colors = [tone, "#ffb04a", "#b89bff", "#8c9eff", "#ff68c4", "#ffffff"];
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement("i");
+      const w = 6 + Math.random() * 8;
+      p.style.width = w + "px";
+      p.style.height = w * (0.5 + Math.random() * 0.9) + "px";
+      p.style.left = ox + "px";
+      p.style.top = oy + "px";
+      p.style.background = colors[i % colors.length];
+      layer.appendChild(p);
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 90 + Math.random() * 190;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist - 90;
+      const rot = (Math.random() - 0.5) * 900;
+      const anim = p.animate(
+        [
+          { transform: "translate(0,0) rotate(0deg)", opacity: 1 },
+          { transform: "translate(" + dx + "px," + dy + "px) rotate(" + rot + "deg)", opacity: 1, offset: 0.5 },
+          { transform: "translate(" + dx * 1.15 + "px," + (dy + 280) + "px) rotate(" + rot * 1.6 + "deg)", opacity: 0 },
+        ],
+        { duration: 1100 + Math.random() * 700, easing: "cubic-bezier(0.2, 0.7, 0.4, 1)" }
+      );
+      anim.onfinish = () => p.remove();
+    }
+  }
+
+  function settle(menu) {
+    const card = $("result-card");
+    card.classList.remove("spinning", "done");
+    void card.offsetWidth;
+    card.classList.add("done");
+    setTone(menu);
+    $("r-name").textContent = menu.name;
+    setVisual(menu, true);
+    setTags(menu);
+    $("result-after").hidden = false;
+    state.spinning = false;
+    burst(CATEGORY_TONE[menu.category]);
+  }
+
+  function runSpin(final, pool) {
     state.spinning = true;
-
-    const final = pickOne(pool);
-    state.shown.add(final.name);
-    state.current = final;
-
     const card = $("result-card");
     card.classList.remove("done");
     card.classList.add("spinning");
-    $("result-actions").hidden = true;
-    $("result-msg").hidden = true;
-    $("result-meta").textContent = "";
+    $("result-after").hidden = true;
+    $("r-photo").hidden = true;
+    $("r-tags").innerHTML = "";
 
+    const flick = pool.length > 1 ? pool : MENUS;
     const TICKS = 18;
     let i = 0;
     let last = null;
 
     function tick() {
-      let item;
       if (i >= TICKS) {
-        item = final;
-      } else {
-        do {
-          item = MENUS[Math.floor(Math.random() * MENUS.length)];
-        } while (item === last);
-      }
-      last = item;
-      $("result-emoji").textContent = item.emoji;
-      $("result-name").textContent = item.name;
-
-      if (i >= TICKS) {
-        finish(final);
+        settle(final);
         return;
+      }
+      let item;
+      do {
+        item = flick[Math.floor(Math.random() * flick.length)];
+      } while (item === last);
+      last = item;
+      const emoji = $("r-emoji");
+      emoji.textContent = item.emoji;
+      $("r-name").textContent = item.name;
+      setTone(item);
+      if (!REDUCE) {
+        emoji.animate(
+          [
+            { transform: "translateY(-26px) scale(0.8) rotate(-8deg)", opacity: 0.3 },
+            { transform: "none", opacity: 1 },
+          ],
+          { duration: 110 }
+        );
       }
       i += 1;
       setTimeout(tick, 60 + i * i * 0.6);
@@ -177,74 +339,163 @@
     tick();
   }
 
-  function spiceLabel(level) {
-    return ["안 매워요", "살짝 매워요", "매워요", "아주 매워요"][level] || "";
+  function clearPlaces() {
+    $("place-list").innerHTML = "";
+    $("place-links").hidden = true;
+    $("area-input").value = state.area;
   }
 
-  function finish(menu) {
-    const card = $("result-card");
-    card.classList.remove("spinning");
-    card.classList.add("done");
-    $("result-meta").textContent = menu.category + " · " + spiceLabel(menu.spicy);
-
-    const q = encodeURIComponent("근처 " + menu.name);
-    $("btn-kakao").href = "https://map.kakao.com/link/search/" + q;
-    $("btn-naver").href = "https://m.map.naver.com/search2/search.naver?query=" + q;
-
+  function showResult(menu, opts) {
+    const o = Object.assign({ spin: false, pool: MENUS, again: null, from: "home" }, opts);
+    state.current = menu;
+    state.again = o.again;
+    state.returnTo = o.from;
+    state.shown.add(menu.name);
+    go("result");
+    $("result-msg").hidden = true;
     $("result-actions").hidden = false;
-    state.spinning = false;
+    $("places").hidden = false;
+    $("btn-again").hidden = !o.again;
+    clearPlaces();
+    if (o.spin) runSpin(menu, o.pool);
+    else settle(menu);
   }
 
-  function showNoResult() {
-    show("result");
-    $("result-card").classList.remove("spinning", "done");
-    $("result-emoji").textContent = "🤔";
-    $("result-name").textContent = "맞는 메뉴가 없어요";
-    $("result-meta").textContent = "";
+  function showEmpty() {
+    state.current = null;
+    state.returnTo = "home";
+    go("result");
+    const card = $("result-card");
+    card.classList.remove("spinning", "done");
+    card.style.setProperty("--tone", "#c9c9d1");
+    $("r-emoji").textContent = "🤔";
+    $("r-photo").hidden = true;
+    $("r-name").textContent = "맞는 메뉴가 없어요";
+    $("r-tags").innerHTML = "";
+    $("result-after").hidden = false;
     $("result-actions").hidden = true;
+    $("places").hidden = true;
     const msg = $("result-msg");
-    msg.textContent = "조건이 너무 까다로워요. 조건을 조금 줄여서 다시 해보세요!";
+    msg.textContent = "조건이 너무 까다로워요. 조건을 조금 줄여서 다시 해보세요.";
     msg.hidden = false;
   }
 
-  function start() {
-    const pool = getPool();
+  // ---------- 뽑기 ----------
+  function drawFrom(pool) {
     if (pool.length === 0) {
-      showNoResult();
+      showEmpty();
       return;
     }
-    show("result");
-    spinTo(pool);
+    const menu = pickOne(pool);
+    showResult(menu, {
+      spin: true,
+      pool,
+      from: "home",
+      again: () => drawFrom(pool),
+    });
+  }
+
+  function drawRandom() {
+    drawFrom(MENUS);
+  }
+
+  function drawFiltered() {
+    drawFrom(MENUS.filter(matches));
+  }
+
+  // ---------- 근처 식당 ----------
+  function showLinks(area, menuName) {
+    const links = Places.mapLinks(area, menuName);
+    $("link-kakao").href = links.kakao;
+    $("link-naver").href = links.naver;
+    $("place-links").hidden = false;
+  }
+
+  function renderPlaces(items) {
+    const list = $("place-list");
+    list.innerHTML = "";
+    items.forEach((p) => {
+      const a = el("a", "place");
+      a.href = p.url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      const head = el("div");
+      head.append(el("span", "place-name", p.name), el("span", "place-cat", p.category));
+      a.append(head, el("div", "place-addr", p.address));
+      list.appendChild(a);
+    });
+  }
+
+  async function searchPlaces(e) {
+    e.preventDefault();
+    const menu = state.current;
+    if (!menu) return;
+    const area = $("area-input").value.trim();
+    if (!area) {
+      toast("동네 이름을 입력해 주세요");
+      $("area-input").focus();
+      return;
+    }
+    state.area = area;
+    const list = $("place-list");
+    list.innerHTML = "";
+
+    if (!Places.enabled()) {
+      list.appendChild(el("p", "place-hint", "지도 앱에서 \"" + area + " " + menu.name + "\" 검색 결과를 볼 수 있어요."));
+      showLinks(area, menu.name);
+      return;
+    }
+
+    list.appendChild(el("p", "place-hint", "찾는 중이에요..."));
+    try {
+      const items = await Places.search(area, menu.name);
+      if (state.current !== menu) return;
+      list.innerHTML = "";
+      if (items.length === 0) {
+        list.appendChild(el("p", "place-hint", "결과가 없어요. 동네 이름을 바꾸거나 더 넓게 입력해 보세요. (예: 강남구)"));
+      } else {
+        renderPlaces(items);
+      }
+      showLinks(area, menu.name);
+    } catch (err) {
+      if (state.current !== menu) return;
+      list.innerHTML = "";
+      list.appendChild(el("p", "place-hint", "식당 목록을 불러오지 못했어요. 지도 앱에서 대신 찾아볼 수 있어요."));
+      showLinks(area, menu.name);
+    }
   }
 
   // ---------- 공유 ----------
   async function share() {
-    if (!state.current) return;
     const m = state.current;
+    if (!m) return;
     const text = "오늘 메뉴는 \"" + m.name + "\" " + m.emoji + " ! (오늘 뭐 먹지?)";
     const url = /^https?:/.test(location.href) ? location.href : undefined;
-
     if (navigator.share) {
       try {
         await navigator.share(url ? { text, url } : { text });
         return;
       } catch (e) {
-        if (e && e.name === "AbortError") return;  // 사용자가 취소
+        if (e && e.name === "AbortError") return;
       }
     }
     try {
       await navigator.clipboard.writeText(url ? text + " " + url : text);
       toast("복사했어요. 붙여넣어서 보내세요");
     } catch (e) {
-      toast("공유에 실패했어요");
+      toast("공유하지 못했어요");
     }
   }
 
   // ---------- 시작 ----------
   function init() {
-    buildCategoryChips();
-    bindSingleChoice("chips-people", "people");
-    bindSingleChoice("chips-spice", "spice");
+    applyTheme(document.documentElement.dataset.theme || "light");
+    $("btn-theme").addEventListener("click", toggleTheme);
+    buildSplash();
+    setGreeting();
+    buildTiles();
+    bindToggle("chips-people", "people");
+    bindToggle("chips-spice", "spice");
 
     const list = $("menu-names");
     MENUS.forEach((m) => {
@@ -253,43 +504,31 @@
       list.appendChild(o);
     });
 
+    $("btn-exclude-toggle").addEventListener("click", toggleFold);
     $("btn-exclude-add").addEventListener("click", addExcluded);
     $("exclude-input").addEventListener("keydown", (e) => {
       if (e.key === "Enter") addExcluded();
     });
 
-    $("btn-random").addEventListener("click", () => {
-      // 조건 없이 전체에서 뽑기 (화면의 조건은 건드리지 않음)
-      const saved = {
-        c: new Set(state.categories), p: state.people, s: state.spice, x: new Set(state.excluded),
-      };
-      state.categories.clear(); state.people = "any"; state.spice = "any"; state.excluded.clear();
-      state.lastMode = "random";
-      start();
-      state.categories = saved.c; state.people = saved.p; state.spice = saved.s; state.excluded = saved.x;
-    });
-
-    $("btn-filter").addEventListener("click", () => {
-      state.lastMode = "filter";
-      start();
-    });
-
-    $("btn-again").addEventListener("click", () => {
-      if (state.lastMode === "random") {
-        spinTo(MENUS);
-      } else {
-        const pool = getPool();
-        if (pool.length === 0) showNoResult();
-        else spinTo(pool);
-      }
-    });
-
-    $("btn-share").addEventListener("click", share);
+    $("btn-random").addEventListener("click", drawRandom);
+    $("btn-filter").addEventListener("click", drawFiltered);
     $("btn-reset").addEventListener("click", resetConditions);
+    $("btn-again").addEventListener("click", () => { if (state.again && !state.spinning) state.again(); });
+    $("btn-share").addEventListener("click", share);
+    $("place-form").addEventListener("submit", searchPlaces);
     $("btn-back").addEventListener("click", () => {
       if (state.spinning) return;
-      show("home");
+      go(state.returnTo);
     });
+
+    document.querySelectorAll(".dock-item").forEach((b) => {
+      b.addEventListener("click", () => {
+        if (state.spinning) return;
+        go(b.dataset.view);
+      });
+    });
+
+    runSplash();
   }
 
   init();

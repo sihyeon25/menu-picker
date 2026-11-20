@@ -2,95 +2,201 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ff7a3d">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
   <title>오늘 뭐 먹지?</title>
+  <script>
+    // 화면이 그려지기 전에 라이트/다크를 정해서 깜빡임을 막는다
+    try {
+      var t = localStorage.getItem("theme");
+      if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="app">
+  <!-- 앱을 열 때 나오는 화면 -->
+  <div id="splash" class="splash" aria-hidden="true">
+    <svg class="flower flower-3d splash-flower" viewBox="0 0 100 100"><use href="#flower"/></svg>
+    <span class="float f1">🍜</span>
+    <span class="float f2">🍕</span>
+    <span class="float f3">🍣</span>
+    <span class="float f4">🍔</span>
+    <span class="float f5">🥟</span>
+    <span class="float f6">🍢</span>
+    <div class="splash-logo" id="splash-logo"></div>
+    <p class="splash-sub">고민은 그만, 정해드릴게요</p>
+  </div>
 
-    <!-- 홈 화면 -->
-    <section id="screen-home" class="screen">
-      <header class="hero">
-        <div class="hero-emoji">🍽️</div>
-        <h1>오늘 뭐 먹지?</h1>
-        <p>고민은 그만, 버튼 하나로 정해드려요</p>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="gFlower" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffd58a"/>
+        <stop offset="1" stop-color="#ff9a2e"/>
+      </linearGradient>
+      <g id="flower">
+        <ellipse cx="50" cy="19" rx="13" ry="19"/>
+        <ellipse cx="50" cy="19" rx="13" ry="19" transform="rotate(45 50 50)"/>
+        <ellipse cx="50" cy="19" rx="13" ry="19" transform="rotate(90 50 50)"/>
+        <ellipse cx="50" cy="19" rx="13" ry="19" transform="rotate(135 50 50)"/>
+        <ellipse cx="50" cy="19" rx="13" ry="19" transform="rotate(180 50 50)"/>
+        <ellipse cx="50" cy="19" rx="13" ry="19" transform="rotate(225 50 50)"/>
+        <ellipse cx="50" cy="19" rx="13" ry="19" transform="rotate(270 50 50)"/>
+        <ellipse cx="50" cy="19" rx="13" ry="19" transform="rotate(315 50 50)"/>
+        <circle cx="50" cy="50" r="16"/>
+      </g>
+    </defs>
+  </svg>
+
+  <div class="app">
+
+    <!-- 뽑기 -->
+    <section id="view-home" class="view">
+      <header class="top">
+        <div class="top-row">
+          <span id="today" class="date-pill"></span>
+          <span id="greet" class="greet"></span>
+          <button id="btn-theme" class="icon-btn theme-btn" type="button" aria-label="화면 색 바꾸기 (라이트/다크)">
+            <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+            <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+          </button>
+        </div>
+        <h1 class="title">오늘<br>뭐 먹지?</h1>
       </header>
 
-      <button id="btn-random" class="btn btn-primary btn-big">🎲 아무거나 뽑기</button>
+      <button id="btn-random" class="hero" type="button">
+        <svg class="flower flower-3d hero-flower" viewBox="0 0 100 100" aria-hidden="true"><use href="#flower"/></svg>
+        <span class="hero-copy">
+          <strong>아무거나<br>뽑기</strong>
+          <small>누르면 바로 정해줘요</small>
+        </span>
+        <span class="hero-emoji" aria-hidden="true">🎲</span>
+      </button>
 
-      <div class="divider"><span>또는 조건을 골라서</span></div>
+      <h2 class="section-title">골라서 뽑기</h2>
 
-      <div class="card">
-        <div class="group">
-          <div class="group-title">종류 <small>(여러 개 선택 가능)</small></div>
-          <div class="chips" id="chips-category"></div>
-        </div>
+      <div id="tiles" class="tiles" role="group" aria-label="음식 종류"></div>
 
-        <div class="group">
-          <div class="group-title">누구랑?</div>
-          <div class="chips" id="chips-people">
-            <button class="chip active" data-value="any" aria-pressed="true">상관없어요</button>
-            <button class="chip" data-value="solo" aria-pressed="false">혼자</button>
-            <button class="chip" data-value="group" aria-pressed="false">같이</button>
+      <div class="duo">
+        <div class="mini mini-pink">
+          <div class="mini-title">누구랑?</div>
+          <div class="mini-chips" id="chips-people">
+            <button class="mchip" type="button" data-value="solo" aria-pressed="false">혼자</button>
+            <button class="mchip" type="button" data-value="group" aria-pressed="false">같이</button>
           </div>
         </div>
-
-        <div class="group">
-          <div class="group-title">맵기</div>
-          <div class="chips" id="chips-spice">
-            <button class="chip active" data-value="any" aria-pressed="true">상관없어요</button>
-            <button class="chip" data-value="mild" aria-pressed="false">안 매운 맛</button>
-            <button class="chip" data-value="hot" aria-pressed="false">매운 맛</button>
+        <div class="mini mini-blue">
+          <div class="mini-title">맵기</div>
+          <div class="mini-chips" id="chips-spice">
+            <button class="mchip" type="button" data-value="mild" aria-pressed="false">순하게</button>
+            <button class="mchip" type="button" data-value="hot" aria-pressed="false">맵게</button>
           </div>
         </div>
-
-        <div class="group">
-          <div class="group-title">빼고 싶은 음식 <small>(어제 먹은 것 등)</small></div>
-          <div class="exclude-row">
-            <input id="exclude-input" list="menu-names" placeholder="음식 이름 입력" autocomplete="off">
-            <datalist id="menu-names"></datalist>
-            <button id="btn-exclude-add" class="btn btn-small">추가</button>
-          </div>
-          <div class="chips" id="chips-excluded"></div>
-        </div>
-
-        <button id="btn-filter" class="btn btn-primary btn-big">조건대로 뽑기</button>
-        <button id="btn-reset" class="btn btn-link">조건 모두 지우기</button>
       </div>
 
-      <p class="note">저장되는 정보가 없어요. 입력한 내용은 이 화면에서만 쓰이고 사라져요.</p>
+      <div class="fold">
+        <button id="btn-exclude-toggle" class="fold-head" type="button" aria-expanded="false" aria-controls="exclude-box">
+          <span>빼고 싶은 음식 <small id="exclude-count"></small></span>
+          <span class="fold-plus" aria-hidden="true">＋</span>
+        </button>
+        <div id="exclude-box" class="fold-body">
+          <div class="fold-inner">
+            <div class="inline-form">
+              <input id="exclude-input" list="menu-names" placeholder="어제 먹은 음식 이름" autocomplete="off" aria-label="빼고 싶은 음식 이름">
+              <datalist id="menu-names"></datalist>
+              <button id="btn-exclude-add" class="pill pill-line" type="button">추가</button>
+            </div>
+            <div class="chips" id="chips-excluded"></div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-filter" class="pill pill-ink pill-wide" type="button">이 조건으로 뽑기</button>
+      <button id="btn-reset" class="text-btn" type="button">조건 모두 지우기</button>
+      <p class="note">고른 조건은 저장되지 않아요. 화면을 닫으면 사라져요.</p>
     </section>
 
-    <!-- 결과 화면 -->
-    <section id="screen-result" class="screen" hidden>
-      <button id="btn-back" class="btn btn-link back">← 처음으로</button>
-
-      <div id="result-card" class="result-card spinning">
-        <div id="result-emoji" class="result-emoji">🎲</div>
-        <div id="result-name" class="result-name">...</div>
-        <div id="result-meta" class="result-meta"></div>
+    <!-- 결과 -->
+    <section id="view-result" class="view" hidden>
+      <div class="result-bar">
+        <button id="btn-back" class="icon-btn" type="button" aria-label="돌아가기">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
       </div>
 
-      <div id="result-msg" class="result-msg" hidden></div>
+      <article id="result-card" class="result-card spinning" aria-live="polite">
+        <div class="visual">
+          <svg class="flower visual-flower" viewBox="0 0 100 100" aria-hidden="true"><use href="#flower"/></svg>
+          <span id="r-emoji" class="visual-emoji">🎲</span>
+          <img id="r-photo" class="visual-photo" alt="" hidden>
+        </div>
+        <div class="result-info">
+          <h2 id="r-name" class="r-name">...</h2>
+          <div id="r-tags" class="tags"></div>
+        </div>
+      </article>
 
-      <div id="result-actions" class="actions" hidden>
-        <div class="actions-row">
-          <a id="btn-kakao" class="btn btn-map" target="_blank" rel="noopener">📍 카카오맵에서 근처 찾기</a>
-          <a id="btn-naver" class="btn btn-map" target="_blank" rel="noopener">🗺️ 네이버지도에서 근처 찾기</a>
+      <div id="result-after" hidden>
+        <p id="result-msg" class="empty" hidden></p>
+
+        <div id="result-actions" class="btn-row">
+          <button id="btn-again" class="pill pill-ink" type="button">다시 뽑기</button>
+          <button id="btn-share" class="pill pill-soft" type="button">공유하기</button>
         </div>
-        <div class="actions-row">
-          <button id="btn-share" class="btn">📤 공유하기</button>
-          <button id="btn-again" class="btn btn-primary">🔄 다시 뽑기</button>
-        </div>
+
+        <section id="places" class="panel">
+          <h2 class="panel-title">근처 식당 찾기</h2>
+          <form id="place-form" class="inline-form">
+            <input id="area-input" type="text" placeholder="동네 이름 (예: 강남역)" autocomplete="off" aria-label="동네 이름">
+            <button class="pill pill-ink" type="submit">찾기</button>
+          </form>
+          <div id="place-list" class="place-list"></div>
+          <div id="place-links" class="place-links" hidden>
+            <a id="link-kakao" class="pill pill-line" target="_blank" rel="noopener">카카오맵에서 보기</a>
+            <a id="link-naver" class="pill pill-line" target="_blank" rel="noopener">네이버지도에서 보기</a>
+          </div>
+        </section>
       </div>
     </section>
-  </main>
 
-  <div id="toast" class="toast" hidden></div>
+    <!-- 메뉴 둘러보기 (다음 단계에서 구현) -->
+    <section id="view-browse" class="view" hidden>
+      <header class="top"><h1 class="title">메뉴<br>둘러보기</h1></header>
+      <div class="soon"><span class="soon-emoji">📖</span><p>곧 만들어요</p></div>
+    </section>
 
+    <!-- 다같이 정하기 (다음 단계에서 구현) -->
+    <section id="view-group" class="view" hidden>
+      <header class="top"><h1 class="title">같이<br>정하기</h1></header>
+      <div class="soon"><span class="soon-emoji">👥</span><p>곧 만들어요</p></div>
+    </section>
+
+    <nav id="dock" class="dock" aria-label="메뉴">
+      <span class="dock-bubble" aria-hidden="true"></span>
+      <button class="dock-item active" type="button" data-view="home" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5"/><circle cx="9" cy="9" r="1.1"/><circle cx="15" cy="9" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="9" cy="15" r="1.1"/><circle cx="15" cy="15" r="1.1"/></svg>
+        <span>뽑기</span>
+      </button>
+      <button class="dock-item" type="button" data-view="browse" aria-current="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>
+        <span>메뉴</span>
+      </button>
+      <button class="dock-item" type="button" data-view="group" aria-current="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3.2 2.4-5.3 5.5-5.3s5.5 2.1 5.5 5.3"/><circle cx="17" cy="9.5" r="2.4"/><path d="M16.6 14.2c2.4 0 4 1.6 4 4.2"/></svg>
+        <span>같이</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="config.js"></script>
   <script src="menus.js"></script>
+  <script src="places.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
