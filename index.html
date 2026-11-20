@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ff7a3d">
+  <title>오늘 뭐 먹지?</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+
+    <!-- 홈 화면 -->
+    <section id="screen-home" class="screen">
+      <header class="hero">
+        <div class="hero-emoji">🍽️</div>
+        <h1>오늘 뭐 먹지?</h1>
+        <p>고민은 그만, 버튼 하나로 정해드려요</p>
+      </header>
+
+      <button id="btn-random" class="btn btn-primary btn-big">🎲 아무거나 뽑기</button>
+
+      <div class="divider"><span>또는 조건을 골라서</span></div>
+
+      <div class="card">
+        <div class="group">
+          <div class="group-title">종류 <small>(여러 개 선택 가능)</small></div>
+          <div class="chips" id="chips-category"></div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">누구랑?</div>
+          <div class="chips" id="chips-people">
+            <button class="chip active" data-value="any" aria-pressed="true">상관없어요</button>
+            <button class="chip" data-value="solo" aria-pressed="false">혼자</button>
+            <button class="chip" data-value="group" aria-pressed="false">같이</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">맵기</div>
+          <div class="chips" id="chips-spice">
+            <button class="chip active" data-value="any" aria-pressed="true">상관없어요</button>
+            <button class="chip" data-value="mild" aria-pressed="false">안 매운 맛</button>
+            <button class="chip" data-value="hot" aria-pressed="false">매운 맛</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">빼고 싶은 음식 <small>(어제 먹은 것 등)</small></div>
+          <div class="exclude-row">
+            <input id="exclude-input" list="menu-names" placeholder="음식 이름 입력" autocomplete="off">
+            <datalist id="menu-names"></datalist>
+            <button id="btn-exclude-add" class="btn btn-small">추가</button>
+          </div>
+          <div class="chips" id="chips-excluded"></div>
+        </div>
+
+        <button id="btn-filter" class="btn btn-primary btn-big">조건대로 뽑기</button>
+        <button id="btn-reset" class="btn btn-link">조건 모두 지우기</button>
+      </div>
+
+      <p class="note">저장되는 정보가 없어요. 입력한 내용은 이 화면에서만 쓰이고 사라져요.</p>
+    </section>
+
+    <!-- 결과 화면 -->
+    <section id="screen-result" class="screen" hidden>
+      <button id="btn-back" class="btn btn-link back">← 처음으로</button>
+
+      <div id="result-card" class="result-card spinning">
+        <div id="result-emoji" class="result-emoji">🎲</div>
+        <div id="result-name" class="result-name">...</div>
+        <div id="result-meta" class="result-meta"></div>
+      </div>
+
+      <div id="result-msg" class="result-msg" hidden></div>
+
+      <div id="result-actions" class="actions" hidden>
+        <div class="actions-row">
+          <a id="btn-kakao" class="btn btn-map" target="_blank" rel="noopener">📍 카카오맵에서 근처 찾기</a>
+          <a id="btn-naver" class="btn btn-map" target="_blank" rel="noopener">🗺️ 네이버지도에서 근처 찾기</a>
+        </div>
+        <div class="actions-row">
+          <button id="btn-share" class="btn">📤 공유하기</button>
+          <button id="btn-again" class="btn btn-primary">🔄 다시 뽑기</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="menus.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
