@@ -826,3 +826,6 @@ input:focus { border-color: var(--accent); }
 :root[data-theme="dark"] .dim-tab[aria-pressed="true"],
 :root[data-theme="dark"] .sum-chip { background: var(--dk-accent); }
 :root[data-theme="dark"] .toast { background: var(--dk-accent); }
+
+/* "누구랑?" 카드는 노랑 대신 스카이 */
+.mini-sky { background: var(--sky); }
