@@ -666,34 +666,47 @@
   async function sendCard() {
     const m = state.current;
     if (!m || !cardBlob) return;
-    const file = new File([cardBlob], m.name + ".png", { type: "image/png" });
+    // 파일 이름은 영문으로 한다 (한글 이름은 일부 폰·앱이 "지원하지 않는 형식"으로 거부한다)
+    const file = new File([cardBlob], "menu-card.png", { type: "image/png" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], text: shareMessage(m) });
-        return;
-      } catch (e) {
-        if (e && e.name === "AbortError") return;
+      // 글을 같이 보내면 거부하는 앱이 있어서, 안 되면 이미지만 다시 시도한다
+      const attempts = [{ files: [file], text: shareMessage(m) }, { files: [file] }];
+      for (const data of attempts) {
+        try {
+          await navigator.share(data);
+          return;
+        } catch (e) {
+          if (e && e.name === "AbortError") return;
+        }
       }
     }
-    // 이미지 공유를 지원하지 않는 브라우저(주로 PC): 이미지를 저장하고 글은 복사한다
-    saveCard();
+    // 이미지 공유를 쓸 수 없을 때(주로 PC): 이미지를 저장하고 글은 복사한다
+    const saved = saveCard();
+    let copied = false;
     try {
       await navigator.clipboard.writeText(shareMessage(m));
-      toast("이미지를 저장하고 글을 복사했어요");
-    } catch (e) {
-      toast("이미지를 저장했어요");
-    }
+      copied = true;
+    } catch (e) { /* 복사가 막혀 있어도 계속한다 */ }
+    toast(saved
+      ? (copied ? "이미지를 저장하고 글을 복사했어요" : "이미지를 저장했어요")
+      : "저장이 안 돼요. 카드를 길게 눌러 저장하세요");
   }
 
+  // 이미지를 파일로 내려받는다. 못 하면 false (카카오톡 같은 앱 안 브라우저 등)
   function saveCard() {
     const m = state.current;
-    if (!m || !cardUrl) return;
-    const a = document.createElement("a");
-    a.href = cardUrl;
-    a.download = "오늘뭐먹지-" + m.name + ".png";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    if (!m || !cardUrl) return false;
+    try {
+      const a = document.createElement("a");
+      a.href = cardUrl;
+      a.download = "menu-card.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return !/KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent);
+    } catch (e) {
+      return false;
+    }
   }
 
   // ---------- 글로 공유 (이미지를 못 쓸 때) ----------
@@ -749,8 +762,7 @@
     $("btn-share").addEventListener("click", openShare);
     $("btn-share-send").addEventListener("click", sendCard);
     $("btn-share-save").addEventListener("click", () => {
-      saveCard();
-      toast("이미지를 저장했어요");
+      toast(saveCard() ? "이미지를 저장했어요" : "저장이 안 돼요. 카드를 길게 눌러 저장하세요");
     });
     $("btn-share-close").addEventListener("click", closeShare);
     $("share-sheet").addEventListener("click", (e) => {
