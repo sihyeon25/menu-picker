@@ -96,7 +96,7 @@
   function applyTheme(theme) {
     document.documentElement.dataset.theme = theme;
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", theme === "dark" ? "#0c0c0e" : "#ffffff");
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#1A1512" : "#FFFAF4");
   }
 
   function toggleTheme() {
@@ -227,7 +227,7 @@
 
   // ---------- 결과 화면 ----------
   function setTone(menu) {
-    $("result-card").style.setProperty("--tone", CATEGORY_TONE[menu.category] || "#ffb04a");
+    $("result-card").style.setProperty("--tone", CATEGORY_TONE[menu.category] || "#F9A27A");
   }
 
   function setVisual(menu, withPhoto) {
@@ -314,7 +314,7 @@
     const rect = $("result-card").querySelector(".visual").getBoundingClientRect();
     const ox = rect.left + rect.width / 2;
     const oy = rect.top + rect.height / 2;
-    const colors = [tone, "#b89bff", "#8c9eff", "#6fd0ff", "#5be3c1", "#ff68c4", "#ffb04a", "#ffffff"];
+    const colors = [tone, "#A8E89A", "#F9A27A", "#D5B6F5", "#FFE45E", "#F6A9D9", "#9EC3F5", "#F2776B"];
     for (let i = 0; i < 40; i++) {
       const p = document.createElement("i");
       const w = 6 + Math.random() * 8;
@@ -426,7 +426,7 @@
     go("result");
     const card = $("result-card");
     card.classList.remove("spinning", "done");
-    card.style.setProperty("--tone", "#c9c9d1");
+    card.style.setProperty("--tone", "#F0E2D2");
     $("r-emoji").textContent = "🤔";
     $("r-photo").hidden = true;
     $("r-name").textContent = "맞는 메뉴가 없어요";

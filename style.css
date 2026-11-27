@@ -601,3 +601,213 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .splash { display: none; }
 }
+
+
+/* ===================================================================
+   배달앱 테마: 밝고 따뜻한 새 팔레트(samples/a.css)와 스타일(samples/c.css)
+   =================================================================== */
+
+/* ---- 팔레트와 다크모드 ---- */
+:root {
+  --mint: #A8E89A;
+  --peach: #F9A27A;
+  --lilac: #D5B6F5;
+  --lemon: #FFE45E;
+  --pink: #F6A9D9;
+  --sky: #9EC3F5;
+  --coral: #F2776B;
+
+  --orange: var(--peach);
+  --purple: var(--lilac);
+  --blue: var(--sky);
+  --hot: var(--coral);
+  --sp0: var(--mint);
+  --sp1: var(--lemon);
+  --sp2: var(--peach);
+  --sp3: var(--coral);
+  --on-color: #111111;
+
+  --bg: #FFFFFF;
+  --surface: #F2F0F5;
+  --raised: #FFFFFF;
+  --ink: #111111;
+  --ink-text: #FFFFFF;
+  --muted: #6B6773;
+  --line: #E4E1EA;
+  --dock-bg: #111111;
+  --dock-fg: #A39FAD;
+  --dock-bubble: #FFFFFF;
+  --dock-active: #111111;
+  --tone: var(--peach);
+}
+
+:root[data-theme="dark"] {
+  --bg: #111111;
+  --surface: #1E1D23;
+  --raised: #28262E;
+  --ink: #F2F0F5;
+  --ink-text: #111111;
+  --muted: #A8A4B2;
+  --line: #36333D;
+  --dock-bg: #28262E;
+  --dock-fg: #8E8A99;
+  --dock-bubble: var(--lemon);
+  --dock-active: #111111;
+}
+
+.splash { background: linear-gradient(160deg, var(--lilac) 0%, var(--pink) 55%, var(--peach) 100%); }
+.hero { background: linear-gradient(135deg, var(--lilac) 0%, var(--sky) 100%); }
+.mini-sky { background: var(--sky); }
+.mini-hot { background: var(--coral); }
+.banner { background: var(--sky); }
+
+/* 다크모드: 버튼과 글자 색 */
+:root[data-theme="dark"] .pill-ink { background: var(--lemon); border-color: var(--lemon); color: #111111; }
+:root[data-theme="dark"] .pill-line { border-color: var(--lilac); color: var(--lilac); }
+:root[data-theme="dark"] .pill-soft { background: var(--raised); border-color: var(--raised); color: var(--ink); }
+:root[data-theme="dark"] .dim-tab[aria-pressed="true"],
+:root[data-theme="dark"] .cat-chip[aria-pressed="true"],
+:root[data-theme="dark"] .sum-chip { background: var(--lilac); color: #111111; }
+:root[data-theme="dark"] .cat-chip[style*="--tone"][aria-pressed="true"] { background: var(--tone); color: #111111; box-shadow: 0 0 0 2.5px var(--ink); }
+:root[data-theme="dark"] .chip.excluded { color: var(--muted); }
+:root[data-theme="dark"] .tile.on::after { background: var(--ink); color: var(--ink-text); }
+:root[data-theme="dark"] .icon-btn { background: var(--raised); }
+:root[data-theme="dark"] .toast { background: var(--lemon); color: #111111; }
+
+/* ---- 배달앱 스타일 ---- */
+:root {
+  --accent: #F2776B;
+  --accent-soft: #FFE9E5;
+  --bg: #FFFAF4;
+  --surface: #FFF0E2;
+  --raised: #FFFFFF;
+  --ink: #2B2118;
+  --ink-text: #FFFFFF;
+  --muted: #8A7B6C;
+  --line: #F0E2D2;
+  --on-color: #2B2118;
+  --dock-bg: #FFFFFF;
+  --dock-fg: #B3A596;
+  --dock-active: var(--accent);
+  --shadow: 0 4px 16px rgba(140, 90, 40, 0.1);
+}
+
+:root[data-theme="dark"] {
+  --bg: #1A1512;
+  --surface: #2A221D;
+  --raised: #342B25;
+  --ink: #FFF3E6;
+  --ink-text: #1A1512;
+  --muted: #BAA998;
+  --line: #433830;
+  --dock-bg: #241D19;
+  --dock-fg: #8F8070;
+  --dock-active: var(--lemon);
+  --accent-soft: #4A2C28;
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.splash { background: linear-gradient(160deg, var(--lemon) 0%, var(--peach) 50%, var(--coral) 100%); }
+
+/* 제목은 작고 단정하게 */
+.top { padding: 18px 4px 14px; }
+.title { font-size: 36px; line-height: 1.15; font-weight: 800; }
+.section-title { font-size: 19px; margin: 6px 4px 12px; }
+.date-pill { background: var(--accent-soft); color: var(--accent); }
+:root[data-theme="dark"] .date-pill { color: var(--lemon); }
+
+/* 큰 배너 */
+.hero {
+  min-height: 168px; border-radius: 22px; padding: 22px 20px;
+  background: linear-gradient(120deg, var(--coral) 0%, var(--peach) 100%);
+  color: #FFFFFF;
+  box-shadow: 0 10px 24px rgba(242, 119, 107, 0.35);
+}
+.hero-copy strong { font-size: 30px; }
+.hero-copy small { opacity: 0.95; }
+.hero-emoji { font-size: 84px; right: 20px; top: 24px; }
+.hero-flower { opacity: 0.35; }
+:root[data-theme="dark"] .hero { color: #1A1512; background: linear-gradient(120deg, var(--peach) 0%, var(--lemon) 100%); box-shadow: none; }
+
+/* 종류: 흰 카드 + 동그란 이모지 */
+.tiles { gap: 10px; }
+.tile {
+  aspect-ratio: 1 / 0.96; border-radius: 18px; gap: 8px;
+  background: var(--raised); color: var(--ink); box-shadow: var(--shadow);
+  font-size: 14px; font-weight: 700;
+}
+.tile .te { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: var(--tone); font-size: 28px; }
+.tile.on { box-shadow: 0 0 0 2.5px var(--accent), var(--shadow); transform: translateY(-2px); }
+.tile.on .te { transform: scale(1.08); }
+.tile::after { background: var(--accent); color: #fff; }
+
+.mini { border-radius: 18px; }
+.mini-sky { background: var(--lemon); }
+.mini-hot { background: var(--peach); }
+.mchip { border-radius: 12px; background: rgba(255, 255, 255, 0.85); }
+.mchip[aria-pressed="true"] { background: var(--accent); color: #fff; transform: none; }
+
+.fold, .panel { border-radius: 18px; }
+.fold { box-shadow: var(--shadow); background: var(--raised); }
+.panel { background: var(--surface); }
+.result-card { border-radius: 22px; }
+.result-info { border-radius: 18px; }
+.r-name { font-size: 36px; }
+.tag { border-radius: 10px; }
+.place { border-radius: 14px; box-shadow: var(--shadow); }
+.menu-card { border-radius: 18px; background: var(--raised); box-shadow: var(--shadow); }
+.mc-visual { border-radius: 14px; }
+
+/* 버튼: 각진 둥근 사각형, 코랄 포인트 */
+.pill { border-radius: 14px; font-weight: 700; }
+.pill-ink { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
+.pill-line { border-color: var(--accent); color: var(--accent); }
+.pill-soft { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent); }
+.pill-wide { font-size: 17px; padding: 17px; box-shadow: 0 8px 18px rgba(242, 119, 107, 0.3); }
+:root[data-theme="dark"] .pill-ink { background: var(--lemon); border-color: var(--lemon); color: #1A1512; box-shadow: none; }
+:root[data-theme="dark"] .pill-line { border-color: var(--lemon); color: var(--lemon); }
+:root[data-theme="dark"] .pill-soft { background: var(--raised); border-color: var(--raised); color: var(--ink); }
+:root[data-theme="dark"] .pill-wide { box-shadow: none; }
+
+input[type="text"], input[type="search"], #exclude-input { border-radius: 14px; background: var(--raised); border-color: var(--line); }
+input:focus { border-color: var(--accent); }
+.chip { border-radius: 12px; }
+.cat-chip, .dim-tabs, .dim-tab { border-radius: 12px; }
+.cat-chip[aria-pressed="true"], .dim-tab[aria-pressed="true"], .sum-chip { background: var(--accent); color: #fff; }
+:root[data-theme="dark"] .cat-chip[aria-pressed="true"],
+:root[data-theme="dark"] .dim-tab[aria-pressed="true"],
+:root[data-theme="dark"] .sum-chip { background: var(--lemon); color: #1A1512; }
+.cat-chip[style*="--tone"][aria-pressed="true"] { background: var(--tone); color: #2B2118; box-shadow: 0 0 0 2px var(--accent); }
+.icon-btn { background: var(--raised); box-shadow: var(--shadow); }
+
+/* 하단 탭: 화면 아래에 붙은 평평한 바 */
+.dock {
+  width: 100%; max-width: 480px; bottom: 0;
+  border-radius: 0; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 0;
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -6px 20px rgba(140, 90, 40, 0.08);
+}
+.dock-bubble { display: none; }
+.dock-item { padding: 8px 0 6px; }
+.dock-item.active { color: var(--dock-active); }
+.toast { bottom: calc(84px + env(safe-area-inset-bottom)); border-radius: 12px; }
+.view { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+
+/* ===== 글자 대비 보정 =====
+   코랄·피치 위에는 어두운 글자를 쓰고, 밝은 바탕 위의 코랄 글자는 진한 코랄을 쓴다. */
+:root {
+  --accent-ink: #B8412F;
+  --muted: #766757;
+  --dock-fg: #7D6F60;
+}
+.hero { color: #2B2118; }
+.hero-copy small { opacity: 0.85; }
+.date-pill { color: var(--accent-ink); }
+.pill-ink { color: #2B2118; }
+.pill-line { color: var(--accent-ink); }
+.pill-soft { color: var(--accent-ink); }
+.mchip[aria-pressed="true"] { color: #2B2118; }
+.cat-chip[aria-pressed="true"], .dim-tab[aria-pressed="true"], .sum-chip { color: #2B2118; }
+.tile::after { color: #2B2118; }
+.tag-spice.sp3, .spice-badge.sp3 { color: #2B2118; }
+:root:not([data-theme="dark"]) .dock-item.active { color: var(--accent-ink); }

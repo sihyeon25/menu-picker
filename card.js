@@ -4,10 +4,10 @@ const Card = (function () {
   const H = 1350;
   const FONT = 'Pretendard, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
   const EMOJI = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-  const SPICE_COLOR = ["#5be3c1", "#ffd65a", "#ff9a4d", "#ff4d4d"];
-  const INK = "#111114";
-  const MUTED = "#6e6e78";
-  const SOFT = "#f1f1f6";
+  const SPICE_COLOR = ["#A8E89A", "#FFE45E", "#F9A27A", "#F2776B"];
+  const INK = "#2B2118";
+  const MUTED = "#766757";
+  const SOFT = "#FFF0E2";
 
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -45,7 +45,7 @@ const Card = (function () {
     const spice = (menu.spicy > 0 ? "🌶️".repeat(menu.spicy) + " " : "") + SPICE_LABELS[menu.spicy];
     return [
       { text: menu.category, bg: SOFT, fg: INK },
-      { text: spice, bg: SPICE_COLOR[menu.spicy], fg: menu.spicy === 3 ? "#fff" : INK },
+      { text: spice, bg: SPICE_COLOR[menu.spicy], fg: INK },
       { text: who, bg: SOFT, fg: INK },
     ];
   }
@@ -58,7 +58,7 @@ const Card = (function () {
       /* 글꼴을 못 불러와도 기본 글꼴로 그린다 */
     }
 
-    const tone = CATEGORY_TONE[menu.category] || "#b89bff";
+    const tone = CATEGORY_TONE[menu.category] || "#F9A27A";
     const c = document.createElement("canvas");
     c.width = W;
     c.height = H;
@@ -87,7 +87,7 @@ const Card = (function () {
     // 아래 흰 카드
     const px = 60, pw = W - 120, py = 680, ph = 580;
     roundRect(ctx, px, py, pw, ph, 64);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#FFFAF4";
     ctx.fill();
 
     // 메뉴 이름 (길면 글자 크기를 줄인다)
