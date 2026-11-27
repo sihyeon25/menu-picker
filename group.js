@@ -52,15 +52,26 @@ function status(text) {
   show("status");
 }
 
-function nick() {
-  const input = $("g-nick");
+function randomNick() {
+  return NICK_A[Math.floor(Math.random() * NICK_A.length)] + " " + NICK_B[Math.floor(Math.random() * NICK_B.length)];
+}
+
+// 이름 칸의 값을 읽는다. 비어 있으면 재미있는 이름을 지어 준다
+function nick(id) {
+  const input = $(id || "g-nick");
   let name = input.value.trim().slice(0, 10);
   if (!name) {
-    name = NICK_A[Math.floor(Math.random() * NICK_A.length)] + " " + NICK_B[Math.floor(Math.random() * NICK_B.length)];
+    name = randomNick();
     input.value = name;
   }
   save("nick", name);
+  $("g-nick").value = $("g-nick2").value = name;
   return name;
+}
+
+// 이름 칸에 숫자 4자리만 넣었으면 방 코드를 잘못 넣은 것으로 본다
+function looksLikeCode(id) {
+  return /^\d{4}$/.test($(id).value.trim());
 }
 
 function menuEmoji(name) {
@@ -109,6 +120,7 @@ function exit() {
   clearTimeout(g.settleTimer);
   g.spinning = false;
   save("room", null);
+  invitedMode(null);
   show("lobby");
 }
 
@@ -125,9 +137,19 @@ async function guarded(fn) {
   }
 }
 
-function createRoom() {
+function createRoom(e) {
+  if (e) e.preventDefault();
+  if (looksLikeCode("g-nick2")) {
+    // 코드를 이름 칸에 넣었다: 그 방으로 들어가게 옮겨 준다
+    $("g-code").value = $("g-nick2").value.trim();
+    $("g-nick2").value = "";
+    $("g-nick").value = "";
+    $("g-nick").focus();
+    toast("방 코드 같아서 '코드로 들어가기'에 옮겼어요. 이름을 쓰고 들어가세요");
+    return;
+  }
   guarded(async () => {
-    const name = nick();
+    const name = nick("g-nick2");
     $("g-create").disabled = true;
     try {
       const code = await Store.createRoom(name);
@@ -140,21 +162,50 @@ function createRoom() {
 
 function joinRoom(e) {
   if (e) e.preventDefault();
+  if (looksLikeCode("g-nick")) {
+    if (!$("g-code").value) {
+      // 코드를 이름 칸에 넣었다: 코드 칸으로 옮기고 이름을 다시 묻는다
+      $("g-code").value = $("g-nick").value.trim();
+      $("g-nick").value = "";
+      $("g-nick").focus();
+      toast("방 코드는 위 칸에 넣었어요. 이름을 써 주세요");
+    } else {
+      $("g-nick").focus();
+      toast("이름에는 숫자 4자리만 쓸 수 없어요");
+    }
+    return;
+  }
   const code = $("g-code").value.replace(/\D/g, "");
   if (code.length !== 4) {
     toast("방 코드 4자리를 넣어 주세요");
+    $("g-code-row").hidden = false;
     $("g-code").focus();
     return;
   }
   guarded(async () => {
-    const ok = await Store.joinRoom(code, nick());
+    const ok = await Store.joinRoom(code, nick("g-nick"));
     if (!ok) {
       toast("그 코드의 방이 없어요. 코드를 다시 확인해 주세요");
+      invitedMode(null);
       return;
     }
     $("g-code").value = "";
+    invitedMode(null);
     await enter(code);
   });
+}
+
+// 초대 링크로 왔으면 코드 칸과 방 만들기를 숨기고 이름만 묻는다
+function invitedMode(code) {
+  $("g-invited").hidden = !code;
+  $("g-lead").hidden = !!code;
+  $("g-code-row").hidden = !!code;
+  $("g-create-card").hidden = !!code;
+  $("g-join-title").textContent = code ? "이름 정하고 들어가기" : "코드로 들어가기";
+  if (code) {
+    $("g-invited-code").textContent = code;
+    $("g-code").value = code;
+  }
 }
 
 function leaveRoom() {
@@ -499,7 +550,7 @@ function findPlaces() {
 
 // ---------- 시작 ----------
 function bind() {
-  $("g-create").addEventListener("click", createRoom);
+  $("g-create-form").addEventListener("submit", createRoom);
   $("g-join-form").addEventListener("submit", joinRoom);
   $("g-code").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); });
   $("g-invite").addEventListener("click", invite);
@@ -517,11 +568,18 @@ function bind() {
   $("g-close-vote").addEventListener("click", closeVote);
   $("g-r-again").addEventListener("click", again);
   $("g-r-places").addEventListener("click", findPlaces);
-  $("g-nick").addEventListener("change", () => save("nick", $("g-nick").value.trim().slice(0, 10)));
+  ["g-nick", "g-nick2"].forEach((id) => {
+    $(id).addEventListener("change", () => {
+      if (looksLikeCode(id)) return;
+      const name = $(id).value.trim().slice(0, 10);
+      save("nick", name);
+      $("g-nick").value = $("g-nick2").value = name;
+    });
+  });
 }
 
 async function start() {
-  $("g-nick").value = load("nick") || "";
+  $("g-nick").value = $("g-nick2").value = load("nick") || "";
   bind();
 
   // 초대 링크(?room=1234)로 열었으면 같이 정하기 탭으로 바로 간다
@@ -547,10 +605,9 @@ async function start() {
   if (code && code.length === 4) {
     if (invited && !load("nick") && invited !== saved) {
       // 처음 온 친구: 이름부터 정하고 들어가게 한다
-      $("g-code").value = invited;
+      invitedMode(invited);
       show("lobby");
       $("g-nick").focus();
-      toast("이름을 정하고 들어가기를 눌러 주세요");
       return;
     }
     status("방에 들어가는 중이에요...");

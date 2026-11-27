@@ -194,17 +194,35 @@
 
       <p id="g-status" class="panel g-status">서버에 연결하는 중이에요...</p>
 
-      <!-- 방 밖 -->
+      <!-- 방 밖: 초대받은 사람이 헷갈리지 않게 "들어가기"와 "만들기"를 따로 둔다 -->
       <div id="g-lobby" hidden>
-        <p class="g-lead">방을 만들고 코드를 친구에게 보내 주세요. 각자 폰에서 먹고 싶은 메뉴를 넣고, 룰렛이나 투표로 정해요.</p>
-        <label class="g-label" for="g-nick">내 이름</label>
-        <input id="g-nick" class="g-input" type="text" maxlength="10" placeholder="친구들에게 보일 이름" autocomplete="nickname">
-        <button id="g-create" class="pill pill-ink pill-wide" type="button">새 방 만들기</button>
-        <div class="g-or"><span>또는</span></div>
-        <form id="g-join-form" class="inline-form">
-          <input id="g-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="방 코드 4자리" autocomplete="off" aria-label="방 코드">
-          <button class="pill pill-line" type="submit">들어가기</button>
-        </form>
+        <p id="g-lead" class="g-lead">방을 만들고 코드를 친구에게 보내 주세요. 각자 폰에서 먹고 싶은 메뉴를 넣고, 룰렛이나 투표로 정해요.</p>
+        <div id="g-invited" class="g-invited" hidden>
+          <span class="g-invited-emoji" aria-hidden="true">💌</span>
+          <p><b id="g-invited-code">0000</b> 방에 초대받았어요!<br>이름만 쓰고 들어가세요.</p>
+        </div>
+
+        <section class="panel g-card">
+          <h2 id="g-join-title" class="panel-title">코드로 들어가기</h2>
+          <form id="g-join-form" class="g-form">
+            <div id="g-code-row">
+              <label class="g-label" for="g-code">방 코드</label>
+              <input id="g-code" class="g-input g-code-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4자리 숫자" autocomplete="off">
+            </div>
+            <label class="g-label" for="g-nick">내 이름</label>
+            <input id="g-nick" class="g-input" type="text" maxlength="10" placeholder="친구들에게 보일 이름" autocomplete="nickname">
+            <button class="pill pill-ink pill-wide" type="submit">들어가기</button>
+          </form>
+        </section>
+
+        <section id="g-create-card" class="panel g-card">
+          <h2 class="panel-title">새 방 만들기</h2>
+          <form id="g-create-form" class="g-form">
+            <label class="g-label" for="g-nick2">내 이름</label>
+            <input id="g-nick2" class="g-input" type="text" maxlength="10" placeholder="친구들에게 보일 이름" autocomplete="nickname">
+            <button id="g-create" class="pill pill-line pill-wide" type="submit">방 만들고 코드 받기</button>
+          </form>
+        </section>
       </div>
 
       <!-- 방 안 -->
