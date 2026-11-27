@@ -289,6 +289,10 @@
   function setTags(menu) {
     const box = $("r-tags");
     box.innerHTML = "";
+    if (menu.custom) {
+      box.appendChild(el("span", "tag", "👥 같이 정한 메뉴"));
+      return;
+    }
     box.appendChild(el("span", "tag", menu.category));
     box.appendChild(spiceTag(menu.spicy));
     box.appendChild(el("span", "tag", menu.solo && menu.group ? "🙂👥 혼자도 같이도" : menu.solo ? "🙂 혼자 먹기 좋아요" : "👥 같이 먹기 좋아요"));
@@ -352,7 +356,7 @@
     setTags(menu);
     $("result-after").hidden = false;
     state.spinning = false;
-    burst(CATEGORY_TONE[menu.category]);
+    burst(CATEGORY_TONE[menu.category] || "#F9A27A");
   }
 
   function runSpin(final, pool) {
@@ -879,6 +883,18 @@
     });
 
     runSplash();
+
+    // 같이 정하기(group.js)가 쓰는 기능
+    window.App = {
+      toast,
+      go: (view) => { if (!state.spinning) go(view); },
+      // 같이 정한 메뉴의 결과 화면을 연다. 목록에 없는 메뉴는 이름과 이모지만 보여 준다
+      showMenu(name, emoji) {
+        const menu = MENUS.find((m) => m.name === name) ||
+          { name, emoji: emoji || "🍽️", category: "같이 정한 메뉴", spicy: 0, solo: false, group: true, custom: true };
+        showResult(menu, { spin: false, from: "group" });
+      },
+    };
   }
 
   init();
