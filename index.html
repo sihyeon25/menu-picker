@@ -15,7 +15,7 @@
   </script>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <!-- 앱을 열 때 나오는 화면 -->
@@ -55,6 +55,13 @@
 
     <!-- 뽑기 -->
     <section id="view-home" class="view">
+      <div id="inapp-banner" class="banner" hidden>
+        <p>카카오톡 안에서 열었어요. 카드 저장 같은 일부 기능은 <b>크롬·사파리 같은 다른 브라우저</b>에서 열어야 돼요.</p>
+        <div class="banner-row">
+          <button id="btn-banner-open" class="pill pill-ink pill-mini" type="button">기본 브라우저로 열기</button>
+          <button id="btn-banner-close" class="text-btn" type="button">닫기</button>
+        </div>
+      </div>
       <header class="top">
         <div class="top-row">
           <span id="today" class="date-pill"></span>
@@ -222,10 +229,10 @@
   <div id="confetti" class="confetti" aria-hidden="true"></div>
   <div id="toast" class="toast" role="status" hidden></div>
 
-  <script src="config.js?v=4"></script>
-  <script src="menus.js?v=4"></script>
-  <script src="places.js?v=4"></script>
-  <script src="card.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="config.js?v=5"></script>
+  <script src="menus.js?v=5"></script>
+  <script src="places.js?v=5"></script>
+  <script src="card.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

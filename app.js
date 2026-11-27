@@ -799,6 +799,13 @@
     });
     $("btn-share-close").addEventListener("click", closeShare);
     $("btn-open-external").addEventListener("click", openExternal);
+
+    // 앱 안 브라우저로 열었다면 처음부터 알려 준다
+    if (IN_APP) {
+      $("inapp-banner").hidden = false;
+      $("btn-banner-open").addEventListener("click", openExternal);
+      $("btn-banner-close").addEventListener("click", () => { $("inapp-banner").hidden = true; });
+    }
     $("share-sheet").addEventListener("click", (e) => {
       if (e.target === $("share-sheet")) closeShare();
     });
