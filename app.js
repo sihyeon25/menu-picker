@@ -233,13 +233,57 @@
   function setVisual(menu, withPhoto) {
     $("r-emoji").textContent = menu.emoji;
     const img = $("r-photo");
+    const credit = $("r-credit");
     img.hidden = true;
+    credit.hidden = true;
     if (withPhoto && menu.photo) {
-      img.onload = () => { img.hidden = false; };
-      img.onerror = () => { img.hidden = true; };
+      img.onload = () => {
+        img.hidden = false;
+        if (menu.credit) {
+          credit.textContent = "📷 " + menu.credit.author + " · " + menu.credit.license;
+          credit.href = menu.credit.page;
+          credit.hidden = false;
+        }
+      };
+      img.onerror = () => { img.hidden = true; credit.hidden = true; };
       img.alt = menu.name;
       img.src = menu.photo;
     }
+  }
+
+  // ---------- 사진 출처 ----------
+  function openCredits() {
+    const list = $("credits-list");
+    if (!list.childElementCount) {
+      MENUS.filter((m) => m.credit).forEach((m) => {
+        const c = m.credit;
+        const row = el("div", "credit-row");
+        row.appendChild(el("strong", "", m.name));
+        const a = el("a", "", c.author);
+        a.href = c.page;
+        a.target = "_blank";
+        a.rel = "noopener";
+        row.appendChild(a);
+        if (c.licenseUrl) {
+          const l = el("a", "credit-license", c.license);
+          l.href = c.licenseUrl;
+          l.target = "_blank";
+          l.rel = "noopener";
+          row.appendChild(l);
+        } else {
+          row.appendChild(el("span", "credit-license", c.license));
+        }
+        list.appendChild(row);
+      });
+    }
+    lastFocus = document.activeElement;
+    $("credits-sheet").hidden = false;
+    $("btn-credits-close").focus({ preventScroll: true });
+  }
+
+  function closeCredits() {
+    $("credits-sheet").hidden = true;
+    if (lastFocus) lastFocus.focus();
   }
 
   function setTags(menu) {
@@ -799,6 +843,11 @@
     });
     $("btn-share-close").addEventListener("click", closeShare);
     $("btn-open-external").addEventListener("click", openExternal);
+    $("btn-credits").addEventListener("click", openCredits);
+    $("btn-credits-close").addEventListener("click", closeCredits);
+    $("credits-sheet").addEventListener("click", (e) => {
+      if (e.target === $("credits-sheet")) closeCredits();
+    });
 
     // 앱 안 브라우저로 열었다면 처음부터 알려 준다
     if (IN_APP) {
@@ -811,6 +860,7 @@
     });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !$("share-sheet").hidden) closeShare();
+      if (e.key === "Escape" && !$("credits-sheet").hidden) closeCredits();
     });
     $("place-form").addEventListener("submit", searchPlaces);
     $("btn-back").addEventListener("click", () => {
