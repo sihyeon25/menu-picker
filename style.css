@@ -1,9 +1,17 @@
-/* 색은 4가지만 쓴다: 주황, 보라, 파랑, 분홍. 나머지는 흰색·검정·회색. */
+/* 색: 보라·남색·하늘·민트(쿨톤)가 중심, 주황·분홍은 포인트. 나머지는 흰색·검정·회색. */
 :root {
   --orange: #ffb04a;
   --purple: #b89bff;
   --blue: #8c9eff;
+  --sky: #6fd0ff;
+  --mint: #5be3c1;
   --pink: #ff68c4;
+  /* 맵기 단계: 안 매움(민트) → 살짝(노랑) → 매움(주황) → 아주 매움(빨강) */
+  --hot: #ff5a5a;
+  --sp0: #5be3c1;
+  --sp1: #ffd65a;
+  --sp2: #ff9a4d;
+  --sp3: #ff4d4d;
   --on-color: #111114;   /* 색 블록 위 글자색 (라이트/다크 공통) */
 
   --bg: #ffffff;
@@ -83,7 +91,7 @@ body {
 .splash {
   position: fixed; inset: 0; z-index: 100;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: var(--purple); color: var(--on-color);
+  background: linear-gradient(160deg, var(--purple) 0%, var(--blue) 60%, var(--sky) 100%); color: var(--on-color);
   overflow: hidden;
   transition: transform 0.75s cubic-bezier(0.77, 0, 0.18, 1), border-radius 0.75s;
 }
@@ -154,7 +162,7 @@ body {
   display: flex; align-items: flex-end;
   width: 100%; min-height: 216px;
   margin-bottom: 26px; padding: 26px 24px 24px;
-  background: var(--purple);
+  background: linear-gradient(135deg, var(--purple) 0%, var(--blue) 55%, var(--sky) 100%);
   border: 0; border-radius: 36px;
   color: var(--on-color); text-align: left;
   font-family: inherit;
@@ -210,12 +218,36 @@ body {
 /* ---------- 누구랑 / 맵기 ---------- */
 .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .mini { border-radius: 28px; padding: 18px 14px 14px; color: var(--on-color); }
-.mini-pink { background: var(--pink); }
-.mini-blue { background: var(--blue); }
+.mini-hot { background: var(--hot); }
+.mini-sky { background: var(--sky); }
+
+/* 맵기 표시: 단계마다 색이 다르고 고추 수로도 알 수 있다 */
+.tag-spice { display: inline-flex; align-items: center; gap: 4px; }
+.tag-spice.sp0 { background: var(--sp0); color: var(--on-color); }
+.tag-spice.sp1 { background: var(--sp1); color: var(--on-color); }
+.tag-spice.sp2 { background: var(--sp2); color: var(--on-color); }
+.tag-spice.sp3 { background: var(--sp3); color: #fff; }
+.spice-badge {
+  position: absolute; top: 8px; left: 8px;
+  padding: 3px 8px; border-radius: 999px;
+  font-size: 12px; line-height: 1.3; font-weight: 800;
+  color: var(--on-color);
+}
+.spice-badge.sp1 { background: var(--sp1); }
+.spice-badge.sp2 { background: var(--sp2); }
+.spice-badge.sp3 { background: var(--sp3); color: #fff; }
+
+/* 맛 구분 칩 앞의 색 점 */
+.cat-chip[style*="--tone"]::before {
+  content: ""; display: inline-block; vertical-align: 1px;
+  width: 8px; height: 8px; margin-right: 7px; border-radius: 50%;
+  background: var(--tone);
+}
+.cat-chip[style*="--tone"][aria-pressed="true"]::before { background: var(--on-color); }
 .mini-title { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; }
 .mini-chips { display: flex; gap: 6px; }
 .mchip {
-  flex: 1; border: 0; border-radius: 999px; padding: 11px 0;
+  flex: 1; border: 0; border-radius: 999px; padding: 11px 0; white-space: nowrap;
   background: rgba(255, 255, 255, 0.7); color: var(--on-color);
   font: inherit; font-size: 14px; font-weight: 800;
   cursor: pointer;
@@ -419,7 +451,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .dim-badge {
   display: inline-grid; place-items: center;
   min-width: 18px; height: 18px; margin-left: 5px; padding: 0 5px;
-  border-radius: 999px; background: var(--pink); color: var(--on-color);
+  border-radius: 999px; background: var(--mint); color: var(--on-color);
   font-size: 11px; font-weight: 800;
   animation: pop-in 0.3s var(--spring);
 }

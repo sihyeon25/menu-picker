@@ -245,8 +245,21 @@
     const box = $("r-tags");
     box.innerHTML = "";
     box.appendChild(el("span", "tag", menu.category));
-    box.appendChild(el("span", "tag", SPICE_LABELS[menu.spicy]));
-    box.appendChild(el("span", "tag", menu.solo && menu.group ? "혼자도 같이도" : menu.solo ? "혼자 먹기 좋아요" : "같이 먹기 좋아요"));
+    box.appendChild(spiceTag(menu.spicy));
+    box.appendChild(el("span", "tag", menu.solo && menu.group ? "🙂👥 혼자도 같이도" : menu.solo ? "🙂 혼자 먹기 좋아요" : "👥 같이 먹기 좋아요"));
+  }
+
+  // 맵기를 색과 고추 수로 보여준다 (0=민트, 1=노랑, 2=주황, 3=빨강)
+  function spiceTag(level) {
+    const t = el("span", "tag tag-spice sp" + level);
+    t.textContent = (level > 0 ? "🌶️".repeat(level) + " " : "") + SPICE_LABELS[level];
+    return t;
+  }
+
+  function spiceBadge(level) {
+    const b = el("span", "spice-badge sp" + level, "🌶️".repeat(level));
+    b.setAttribute("aria-hidden", "true");
+    return b;
   }
 
   // 결과가 확정될 때 종이가루가 터진다
@@ -256,7 +269,7 @@
     const rect = $("result-card").querySelector(".visual").getBoundingClientRect();
     const ox = rect.left + rect.width / 2;
     const oy = rect.top + rect.height / 2;
-    const colors = [tone, "#ffb04a", "#b89bff", "#8c9eff", "#ff68c4", "#ffffff"];
+    const colors = [tone, "#b89bff", "#8c9eff", "#6fd0ff", "#5be3c1", "#ff68c4", "#ffb04a", "#ffffff"];
     for (let i = 0; i < 40; i++) {
       const p = document.createElement("i");
       const w = 6 + Math.random() * 8;
@@ -452,6 +465,7 @@
       b.type = "button";
       b.setAttribute("aria-pressed", String(set.has(opt)));
       if (dim.key === "kind") b.style.setProperty("--tone", CATEGORY_TONE[opt]);
+      if (dim.key === "flavor") b.style.setProperty("--tone", FLAVOR_TONE[opt]);
       b.addEventListener("click", () => {
         if (set.has(opt)) set.delete(opt);
         else set.add(opt);
@@ -530,6 +544,7 @@
         img.onerror = () => img.remove();
         visual.appendChild(img);
       }
+      if (m.spicy > 0) visual.appendChild(spiceBadge(m.spicy));
       card.append(visual, el("span", "mc-name", m.name), el("span", "mc-meta", m.category + " · " + SPICE_LABELS[m.spicy]));
       card.addEventListener("click", () => {
         state.browseY = window.scrollY;
