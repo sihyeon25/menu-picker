@@ -47,6 +47,7 @@
 
   function go(view) {
     $("confetti").innerHTML = "";   // 화면이 바뀌면 남은 종이가루를 치운다
+    $("share-sheet").hidden = true;
     VIEWS.forEach((v) => { $("view-" + v).hidden = v !== view; });
     const tab = view === "result" ? state.returnTo : view;
     document.querySelectorAll(".dock-item").forEach((b) => {
@@ -627,8 +628,76 @@
     }
   }
 
-  // ---------- 공유 ----------
-  async function share() {
+  // ---------- 카드 이미지 공유 ----------
+  let cardBlob = null;
+  let cardUrl = null;
+  let lastFocus = null;
+
+  function closeShare() {
+    $("share-sheet").hidden = true;
+    if (lastFocus) lastFocus.focus();
+  }
+
+  async function openShare() {
+    const m = state.current;
+    if (!m) return;
+    lastFocus = document.activeElement;
+    try {
+      cardBlob = await Card.make(m);
+    } catch (e) {
+      cardBlob = null;
+    }
+    if (!cardBlob) {
+      shareText();   // 이미지를 못 만들면 글자로 공유한다
+      return;
+    }
+    if (cardUrl) URL.revokeObjectURL(cardUrl);
+    cardUrl = URL.createObjectURL(cardBlob);
+    $("share-img").src = cardUrl;
+    $("share-sheet").hidden = false;
+    $("btn-share-send").focus();
+  }
+
+  function shareMessage(m) {
+    const url = /^https?:/.test(location.href) ? location.href : "";
+    return "오늘 메뉴는 \"" + m.name + "\" " + m.emoji + " ! (오늘 뭐 먹지?)" + (url ? " " + url : "");
+  }
+
+  async function sendCard() {
+    const m = state.current;
+    if (!m || !cardBlob) return;
+    const file = new File([cardBlob], m.name + ".png", { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], text: shareMessage(m) });
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+    }
+    // 이미지 공유를 지원하지 않는 브라우저(주로 PC): 이미지를 저장하고 글은 복사한다
+    saveCard();
+    try {
+      await navigator.clipboard.writeText(shareMessage(m));
+      toast("이미지를 저장하고 글을 복사했어요");
+    } catch (e) {
+      toast("이미지를 저장했어요");
+    }
+  }
+
+  function saveCard() {
+    const m = state.current;
+    if (!m || !cardUrl) return;
+    const a = document.createElement("a");
+    a.href = cardUrl;
+    a.download = "오늘뭐먹지-" + m.name + ".png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  // ---------- 글로 공유 (이미지를 못 쓸 때) ----------
+  async function shareText() {
     const m = state.current;
     if (!m) return;
     const text = "오늘 메뉴는 \"" + m.name + "\" " + m.emoji + " ! (오늘 뭐 먹지?)";
@@ -677,7 +746,19 @@
     $("btn-filter").addEventListener("click", drawFiltered);
     $("btn-reset").addEventListener("click", resetConditions);
     $("btn-again").addEventListener("click", () => { if (state.again && !state.spinning) state.again(); });
-    $("btn-share").addEventListener("click", share);
+    $("btn-share").addEventListener("click", openShare);
+    $("btn-share-send").addEventListener("click", sendCard);
+    $("btn-share-save").addEventListener("click", () => {
+      saveCard();
+      toast("이미지를 저장했어요");
+    });
+    $("btn-share-close").addEventListener("click", closeShare);
+    $("share-sheet").addEventListener("click", (e) => {
+      if (e.target === $("share-sheet")) closeShare();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !$("share-sheet").hidden) closeShare();
+    });
     $("place-form").addEventListener("submit", searchPlaces);
     $("btn-back").addEventListener("click", () => {
       if (state.spinning) return;
