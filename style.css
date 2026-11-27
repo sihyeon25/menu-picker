@@ -829,3 +829,114 @@ input:focus { border-color: var(--accent); }
 
 /* "누구랑?" 카드는 노랑 대신 스카이 */
 .mini-sky { background: var(--sky); }
+
+/* ===== 같이 정하기 ===== */
+.g-status { text-align: center; color: var(--muted); font-weight: 700; }
+.g-lead { margin: 0 4px 18px; color: var(--muted); font-size: 15px; font-weight: 600; line-height: 1.6; }
+.g-label { display: block; margin: 0 4px 8px; font-size: 14px; font-weight: 800; }
+.g-input { display: block; width: 100%; margin-bottom: 14px; }
+.g-or { display: flex; align-items: center; gap: 12px; margin: 22px 4px 16px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.g-or::before, .g-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.g-hint { margin: 4px 2px 12px; color: var(--muted); font-size: 14px; font-weight: 600; line-height: 1.5; }
+.g-count { font-size: 15px; color: var(--muted); font-weight: 700; }
+
+.g-code-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px 20px; margin-bottom: 12px; border-radius: 18px;
+  background: linear-gradient(120deg, var(--coral) 0%, var(--peach) 100%); color: #2B2118;
+  box-shadow: 0 10px 24px rgba(242, 119, 107, 0.3);
+}
+:root[data-theme="dark"] .g-code-card { background: linear-gradient(120deg, var(--peach) 0%, var(--dk-hero-end) 100%); box-shadow: none; }
+.g-code-text small { display: block; font-size: 13px; font-weight: 700; opacity: 0.8; }
+.g-code-text strong { display: block; font-size: 40px; font-weight: 800; letter-spacing: 0.12em; line-height: 1.1; }
+:root .g-code-card .pill-ink { background: #FFFFFF; border-color: #FFFFFF; color: var(--accent-ink); box-shadow: none; }
+
+.g-members { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 2px 14px; }
+.g-member {
+  padding: 7px 12px; border-radius: 12px;
+  background: var(--raised); box-shadow: var(--shadow);
+  font-size: 13px; font-weight: 700;
+  animation: pop-in 0.35s var(--spring) backwards;
+}
+.g-member.me { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+:root[data-theme="dark"] .g-member.me { box-shadow: 0 0 0 2px var(--dk-accent); }
+.g-member.off { opacity: 0.45; }
+
+.g-random {
+  margin: -2px 0 12px; padding: 6px 2px; border: 0; background: none;
+  color: var(--accent-ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+:root[data-theme="dark"] .g-random { color: var(--dk-accent); }
+.g-items { display: flex; flex-direction: column; gap: 8px; }
+.g-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 10px 10px 10px; border-radius: 14px;
+  background: var(--raised); box-shadow: var(--shadow);
+  animation: pop-in 0.35s var(--spring) backwards;
+}
+.g-item-emoji { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--tone); font-size: 22px; }
+.g-item-text { flex: 1; min-width: 0; }
+.g-item-text strong { display: block; font-size: 16px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-item-text small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.g-item-del {
+  flex: none; width: 34px; height: 34px; border: 0; border-radius: 50%;
+  background: var(--surface); color: var(--muted); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer;
+}
+
+.g-modes { margin: 18px 0 12px; }
+.g-modes .dim-tab:disabled { cursor: default; opacity: 0.6; }
+
+.wheel-box { position: relative; width: min(100%, 320px); margin: 6px auto 20px; aspect-ratio: 1; }
+.wheel {
+  width: 100%; height: 100%; display: block;
+  border-radius: 50%; box-shadow: 0 0 0 6px var(--raised), 0 10px 26px rgba(140, 90, 40, 0.22);
+}
+.wheel-slice { stroke: var(--raised); stroke-width: 1.2; }
+.wheel-label { fill: #2B2118; font-family: var(--font); font-weight: 800; }
+.wheel-hub { fill: var(--raised); stroke: var(--line); stroke-width: 2; }
+.wheel-empty { fill: var(--raised); }
+.wheel-empty-text { fill: var(--muted); font-family: var(--font); font-size: 11px; font-weight: 700; }
+.wheel-pin {
+  position: absolute; z-index: 1; left: 50%; top: -10px; transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 14px solid transparent; border-right: 14px solid transparent;
+  border-top: 26px solid var(--accent);
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.2));
+}
+:root[data-theme="dark"] .wheel-pin { border-top-color: var(--dk-accent); }
+
+.g-ranking { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.g-rank {
+  position: relative; overflow: hidden;
+  display: block; width: 100%; padding: 13px 14px; text-align: left;
+  border: 2px solid transparent; border-radius: 14px;
+  background: var(--raised); color: var(--ink); box-shadow: var(--shadow);
+  font: inherit; cursor: pointer;
+  transition: transform 0.3s var(--spring), border-color 0.2s;
+}
+.g-rank:active { transform: scale(0.97); }
+.g-rank:disabled { cursor: default; }
+.g-rank.mine { border-color: var(--accent); }
+:root[data-theme="dark"] .g-rank.mine { border-color: var(--dk-accent); }
+.g-rank-bar {
+  position: absolute; left: 0; top: 0; bottom: 0; width: var(--w);
+  background: var(--tone); opacity: 0.45;
+  transition: width 0.5s var(--spring);
+}
+.g-rank-head { position: relative; display: flex; justify-content: space-between; gap: 10px; font-size: 16px; font-weight: 800; }
+.g-rank-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-rank-count { flex: none; }
+.g-rank-who { position: relative; display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.g-rank.top .g-rank-name::after { content: " 👑"; }
+
+.g-result {
+  margin: 14px 0; padding: 24px 20px 10px; border-radius: 22px; text-align: center;
+  background: var(--tone, var(--peach)); color: #2B2118;
+  box-shadow: 0 10px 26px rgba(140, 90, 40, 0.22);
+}
+.g-result small { display: block; font-size: 14px; font-weight: 800; opacity: 0.75; }
+.g-r-emoji { display: block; margin: 6px 0 2px; font-size: 76px; line-height: 1.1; }
+.g-r-name { margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em; word-break: keep-all; }
+.g-r-by { margin: 6px 0 18px; font-size: 14px; font-weight: 700; opacity: 0.75; }
+:root .g-result .pill-ink { background: #2B2118; border-color: #2B2118; color: #FFFFFF; box-shadow: none; }
+:root .g-result .pill-soft { background: rgba(255, 255, 255, 0.7); border-color: transparent; color: #2B2118; }

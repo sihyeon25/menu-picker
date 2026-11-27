@@ -15,7 +15,7 @@
   </script>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
   <!-- 앱을 열 때 나오는 화면 -->
@@ -188,10 +188,80 @@
       <p id="browse-empty" class="empty" hidden>맞는 메뉴가 없어요. 다른 이름이나 종류로 찾아보세요.</p>
     </section>
 
-    <!-- 다같이 정하기 (다음 단계에서 구현) -->
+    <!-- 다같이 정하기: 방 코드로 여러 폰이 모여 후보를 넣고 룰렛이나 투표로 정한다 (group.js) -->
     <section id="view-group" class="view" hidden>
       <header class="top"><h1 class="title">같이<br>정하기</h1></header>
-      <div class="soon"><span class="soon-emoji">👥</span><p>곧 만들어요</p></div>
+
+      <p id="g-status" class="panel g-status">서버에 연결하는 중이에요...</p>
+
+      <!-- 방 밖 -->
+      <div id="g-lobby" hidden>
+        <p class="g-lead">방을 만들고 코드를 친구에게 보내 주세요. 각자 폰에서 먹고 싶은 메뉴를 넣고, 룰렛이나 투표로 정해요.</p>
+        <label class="g-label" for="g-nick">내 이름</label>
+        <input id="g-nick" class="g-input" type="text" maxlength="10" placeholder="친구들에게 보일 이름" autocomplete="nickname">
+        <button id="g-create" class="pill pill-ink pill-wide" type="button">새 방 만들기</button>
+        <div class="g-or"><span>또는</span></div>
+        <form id="g-join-form" class="inline-form">
+          <input id="g-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="방 코드 4자리" autocomplete="off" aria-label="방 코드">
+          <button class="pill pill-line" type="submit">들어가기</button>
+        </form>
+      </div>
+
+      <!-- 방 안 -->
+      <div id="g-room" hidden>
+        <div class="g-code-card">
+          <div class="g-code-text">
+            <small>방 코드</small>
+            <strong id="g-room-code">0000</strong>
+          </div>
+          <button id="g-invite" class="pill pill-ink pill-mini" type="button">친구 부르기</button>
+        </div>
+        <div id="g-members" class="g-members" aria-label="방에 있는 사람"></div>
+
+        <section class="panel">
+          <h2 class="panel-title">후보 메뉴 <small id="g-count" class="g-count"></small></h2>
+          <form id="g-add-form" class="inline-form">
+            <input id="g-add" type="text" list="menu-names" maxlength="20" placeholder="먹고 싶은 메뉴" autocomplete="off" aria-label="후보 메뉴 이름">
+            <button class="pill pill-ink" type="submit">넣기</button>
+          </form>
+          <button id="g-add-random" class="g-random" type="button">🎲 아무거나 하나 넣기</button>
+          <div id="g-items" class="g-items"></div>
+          <p id="g-items-empty" class="g-hint">아직 후보가 없어요. 먹고 싶은 메뉴를 넣어 주세요.</p>
+        </section>
+
+        <div id="g-modes" class="dim-tabs g-modes" role="group" aria-label="정하는 방법">
+          <button class="dim-tab" type="button" data-mode="roulette" aria-pressed="true">🎡 룰렛</button>
+          <button class="dim-tab" type="button" data-mode="vote" aria-pressed="false">🗳️ 투표</button>
+        </div>
+
+        <section id="g-roulette" class="panel g-roulette">
+          <p id="g-tie" class="g-hint" hidden>표가 같아서 룰렛으로 정해요!</p>
+          <div class="wheel-box">
+            <span class="wheel-pin" aria-hidden="true"></span>
+            <svg id="g-wheel" class="wheel" viewBox="-100 -100 200 200" role="img" aria-label="룰렛"></svg>
+          </div>
+          <button id="g-spin" class="pill pill-ink pill-wide" type="button">룰렛 돌리기</button>
+        </section>
+
+        <section id="g-vote" class="panel" hidden>
+          <p class="g-hint">마음에 드는 메뉴를 눌러 주세요. 여러 개 골라도 돼요.</p>
+          <div id="g-ranking" class="g-ranking"></div>
+          <button id="g-close-vote" class="pill pill-ink pill-wide" type="button">투표 끝내기</button>
+        </section>
+
+        <section id="g-result" class="g-result" hidden aria-live="polite">
+          <small>오늘은 이거!</small>
+          <span id="g-r-emoji" class="g-r-emoji"></span>
+          <h2 id="g-r-name" class="g-r-name"></h2>
+          <p id="g-r-by" class="g-r-by"></p>
+          <div class="btn-row">
+            <button id="g-r-places" class="pill pill-ink" type="button">식당 찾기</button>
+            <button id="g-r-again" class="pill pill-soft" type="button">다시 정하기</button>
+          </div>
+        </section>
+
+        <button id="g-leave" class="text-btn" type="button">방 나가기</button>
+      </div>
     </section>
 
     <nav id="dock" class="dock" aria-label="메뉴">
@@ -241,11 +311,12 @@
   <div id="confetti" class="confetti" aria-hidden="true"></div>
   <div id="toast" class="toast" role="status" hidden></div>
 
-  <script src="config.js?v=10"></script>
-  <script src="menus.js?v=10"></script>
-  <script src="photos.js?v=10"></script>
-  <script src="places.js?v=10"></script>
-  <script src="card.js?v=10"></script>
-  <script src="app.js?v=10"></script>
+  <script src="config.js?v=11"></script>
+  <script src="menus.js?v=11"></script>
+  <script src="photos.js?v=11"></script>
+  <script src="places.js?v=11"></script>
+  <script src="card.js?v=11"></script>
+  <script src="app.js?v=11"></script>
+  <script type="module" src="group.js?v=11"></script>
 </body>
 </html>

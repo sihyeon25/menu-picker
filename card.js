@@ -41,6 +41,7 @@ const Card = (function () {
   }
 
   function tagList(menu) {
+    if (menu.custom) return [{ text: "👥 같이 정한 메뉴", bg: SOFT, fg: INK }];
     const who = menu.solo && menu.group ? "🙂👥 혼자도 같이도" : menu.solo ? "🙂 혼자 먹기 좋아요" : "👥 같이 먹기 좋아요";
     const spice = (menu.spicy > 0 ? "🌶️".repeat(menu.spicy) + " " : "") + SPICE_LABELS[menu.spicy];
     return [
