@@ -553,6 +553,12 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
+.inapp {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin: -4px 0 14px; padding: 14px 16px; border-radius: 20px;
+  background: var(--surface); text-align: center;
+}
+.inapp p { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.5; }
 .share-hint { margin: -6px 0 16px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); }
 
 /* ---------- 종이가루 / 알림 ---------- */

@@ -632,6 +632,28 @@
   let cardBlob = null;
   let cardUrl = null;
   let lastFocus = null;
+  // 카카오톡·인스타그램 같은 앱 안 브라우저는 파일 저장을 막는다 ("지원하지 않는 파일 형식")
+  const UA = navigator.userAgent;
+  const IN_APP = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(UA);
+  const IN_KAKAO = /KAKAOTALK/i.test(UA);
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
+
+  // 지금 페이지를 폰의 기본 브라우저로 다시 연다
+  function openExternal() {
+    if (IN_KAKAO) {
+      location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(location.href);
+    } else {
+      toast("화면 구석의 ⋮ 메뉴에서 '다른 브라우저로 열기'를 눌러 주세요");
+    }
+  }
 
   function closeShare() {
     $("share-sheet").hidden = true;
@@ -653,7 +675,13 @@
     }
     if (cardUrl) URL.revokeObjectURL(cardUrl);
     cardUrl = URL.createObjectURL(cardBlob);
-    $("share-img").src = cardUrl;
+    // 앱 안 브라우저는 길게 눌러 저장할 수 있도록 blob 대신 data 주소를 쓴다
+    let shown = cardUrl;
+    if (IN_APP) {
+      try { shown = await blobToDataUrl(cardBlob); } catch (e) { /* blob 주소를 그대로 쓴다 */ }
+    }
+    $("share-img").src = shown;
+    $("share-inapp").hidden = !IN_APP;
     $("share-sheet").hidden = false;
     $("btn-share-send").focus();
   }
@@ -680,6 +708,11 @@
         }
       }
     }
+    // 앱 안 브라우저에서는 파일 내려받기를 시도하지 않는다 (오류 화면만 뜬다)
+    if (IN_APP) {
+      toast("앱 안에서는 저장이 막혀 있어요. 카드를 길게 누르거나 기본 브라우저로 열어 주세요");
+      return;
+    }
     // 이미지 공유를 쓸 수 없을 때(주로 PC): 이미지를 저장하고 글은 복사한다
     const saved = saveCard();
     let copied = false;
@@ -695,7 +728,7 @@
   // 이미지를 파일로 내려받는다. 못 하면 false (카카오톡 같은 앱 안 브라우저 등)
   function saveCard() {
     const m = state.current;
-    if (!m || !cardUrl) return false;
+    if (!m || !cardUrl || IN_APP) return false;
     try {
       const a = document.createElement("a");
       a.href = cardUrl;
@@ -703,7 +736,7 @@
       document.body.appendChild(a);
       a.click();
       a.remove();
-      return !/KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent);
+      return true;
     } catch (e) {
       return false;
     }
@@ -765,6 +798,7 @@
       toast(saveCard() ? "이미지를 저장했어요" : "저장이 안 돼요. 카드를 길게 눌러 저장하세요");
     });
     $("btn-share-close").addEventListener("click", closeShare);
+    $("btn-open-external").addEventListener("click", openExternal);
     $("share-sheet").addEventListener("click", (e) => {
       if (e.target === $("share-sheet")) closeShare();
     });
