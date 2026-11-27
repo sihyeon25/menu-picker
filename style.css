@@ -811,3 +811,18 @@ input:focus { border-color: var(--accent); }
 .tile::after { color: #2B2118; }
 .tag-spice.sp3, .spice-badge.sp3 { color: #2B2118; }
 :root:not([data-theme="dark"]) .dock-item.active { color: var(--accent-ink); }
+
+/* ===== 다크모드 강조색: 노란 글씨·버튼을 이 변수 하나로 바꾼다 ===== */
+:root[data-theme="dark"] {
+  --dk-accent: #D5B6F5;   /* 라일락 */
+  --dk-hero-end: #F6A9D9;   /* 핑크 */
+  --dock-active: var(--dk-accent);
+}
+:root[data-theme="dark"] .date-pill { color: var(--dk-accent); }
+:root[data-theme="dark"] .hero { background: linear-gradient(120deg, var(--peach) 0%, var(--dk-hero-end) 100%); }
+:root[data-theme="dark"] .pill-ink { background: var(--dk-accent); border-color: var(--dk-accent); }
+:root[data-theme="dark"] .pill-line { border-color: var(--dk-accent); color: var(--dk-accent); }
+:root[data-theme="dark"] .cat-chip[aria-pressed="true"],
+:root[data-theme="dark"] .dim-tab[aria-pressed="true"],
+:root[data-theme="dark"] .sum-chip { background: var(--dk-accent); }
+:root[data-theme="dark"] .toast { background: var(--dk-accent); }
