@@ -239,7 +239,7 @@
     if (withPhoto && menu.photo) {
       img.onload = () => {
         img.hidden = false;
-        if (menu.credit) {
+        if (menu.credit && menu.credit.page) {   // 직접 제공한 사진에는 출처 표시가 필요 없다
           credit.textContent = "📷 " + menu.credit.author + " · " + menu.credit.license;
           credit.href = menu.credit.page;
           credit.hidden = false;
@@ -255,7 +255,7 @@
   function openCredits() {
     const list = $("credits-list");
     if (!list.childElementCount) {
-      MENUS.filter((m) => m.credit).forEach((m) => {
+      MENUS.filter((m) => m.credit && m.credit.page).forEach((m) => {
         const c = m.credit;
         const row = el("div", "credit-row");
         row.appendChild(el("strong", "", m.name));
